@@ -12,7 +12,7 @@ import { RootStackParamList } from '../types/navigation.types';
 
 // Import navigators
 import AuthNavigator from './AuthNavigator';
-// import SocietyNavigator from './SocietyNavigator'; // TODO: Create this
+import SocietyNavigator from './SocietyNavigator';
 // import ContractorNavigator from './ContractorNavigator'; // TODO: Create this
 
 // Temporary placeholder screens
@@ -54,13 +54,13 @@ const RootNavigator: React.FC = () => {
           // Society Stack - for society users
           <Stack.Screen 
             name="Society" 
-            component={WelcomeScreen} // Temporary - will be SocietyNavigator
+            component={SocietyNavigator}
           />
         ) : (
           // Contractor Stack - for contractor users
           <Stack.Screen 
             name="Contractor" 
-            component={WelcomeScreen} // Temporary - will be ContractorNavigator
+            component={WelcomeScreen as any} // Temporary - will be ContractorNavigator
           />
         )}
       </Stack.Navigator>
