@@ -27,6 +27,14 @@ from app.schemas.request import (
     RequestListResponse,
     RequestSearchFilters,
 )
+from app.schemas.bid import (
+    BidCreate,
+    BidUpdate,
+    BidStatusUpdate,
+    BidResponse,
+    BidListResponse,
+    BidStatistics,
+)
 
 __all__ = [
     "UserCreate",
@@ -46,4 +54,10 @@ __all__ = [
     "RequestResponse",
     "RequestListResponse",
     "RequestSearchFilters",
+    "BidCreate",
+    "BidUpdate",
+    "BidStatusUpdate",
+    "BidResponse",
+    "BidListResponse",
+    "BidStatistics",
 ]
