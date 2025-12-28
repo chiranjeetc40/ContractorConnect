@@ -9,8 +9,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { theme } from '../theme/theme';
 import { SocietyTabParamList } from '../types/navigation.types';
 
-// Import screens
-import SocietyHomeScreen from '../screens/society/SocietyHomeScreen';
+// Import navigators and screens
+import SocietyStackNavigator from './SocietyStackNavigator';
 // import ProfileScreen from '../screens/shared/ProfileScreen'; // TODO: Create this
 
 // Temporary placeholder for Profile
@@ -65,10 +65,10 @@ const SocietyNavigator: React.FC = () => {
     >
       <Tab.Screen
         name="SocietyHome"
-        component={SocietyHomeScreen}
+        component={SocietyStackNavigator}
         options={{
           title: 'Home',
-          headerTitle: 'My Requests',
+          headerShown: false, // Stack navigator will handle headers
         }}
       />
       <Tab.Screen

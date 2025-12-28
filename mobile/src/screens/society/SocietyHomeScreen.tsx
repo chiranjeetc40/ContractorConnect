@@ -16,13 +16,13 @@ import { FAB, Searchbar, Chip } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../theme/theme';
-import { SocietyTabScreenProps } from '../../types/navigation.types';
+import { SocietyStackScreenProps } from '../../types/navigation.types';
 import { RequestStatus } from '../../types/models.types';
 import RequestCard from '../../components/common/RequestCard';
 import EmptyState from '../../components/common/EmptyState';
 import Loading from '../../components/common/Loading';
 
-type Props = SocietyTabScreenProps<'SocietyHome'>;
+type Props = SocietyStackScreenProps<'SocietyHomeScreen'>;
 
 interface MockRequest {
   id: string;
@@ -114,9 +114,7 @@ const SocietyHomeScreen: React.FC<Props> = ({ navigation }) => {
 
   // Handle create new request
   const handleCreateRequest = () => {
-    // TODO: Navigate to Create Request screen
-    // navigation.navigate('CreateRequest');
-    console.log('Navigate to create request');
+    navigation.navigate('CreateRequest');
   };
 
   // Render filter chips
