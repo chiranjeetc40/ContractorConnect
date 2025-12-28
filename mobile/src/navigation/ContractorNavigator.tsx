@@ -11,6 +11,7 @@ import { ContractorTabParamList } from '../types/navigation.types';
 
 // Import navigators
 import ContractorStackNavigator from './ContractorStackNavigator';
+import MyBidsScreen from '../screens/contractor/MyBidsScreen';
 // import ProfileScreen from '../screens/shared/ProfileScreen'; // TODO: Create this
 
 // Temporary placeholder for Profile
@@ -77,7 +78,7 @@ const ContractorNavigator: React.FC = () => {
       />
       <Tab.Screen
         name="ContractorBids"
-        component={WelcomeScreen as any}
+        component={MyBidsScreen as any}
         options={{
           title: 'My Bids',
         }}
