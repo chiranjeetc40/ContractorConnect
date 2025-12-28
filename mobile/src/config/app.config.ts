@@ -17,11 +17,11 @@ export const APP_CONFIG = {
   
   // Storage Keys
   STORAGE_KEYS: {
-    AUTH_TOKEN: '@auth_token',
-    REFRESH_TOKEN: '@refresh_token',
-    USER_DATA: '@user_data',
-    THEME_MODE: '@theme_mode',
-    LANGUAGE: '@language',
+    AUTH_TOKEN: 'auth_token',
+    REFRESH_TOKEN: 'refresh_token',
+    USER_DATA: 'user_data',
+    THEME_MODE: 'theme_mode',
+    LANGUAGE: 'language',
   },
   
   // Validation

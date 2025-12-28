@@ -52,7 +52,7 @@ const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
       <View style={styles.actionsContainer}>
         <Button
           mode="contained"
-          onPress={() => {}} // Will navigate to Register
+          onPress={() => navigation.navigate('Register')}
           style={styles.registerButton}
           contentStyle={styles.buttonContent}
           labelStyle={styles.buttonLabel}
@@ -62,7 +62,7 @@ const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
         
         <Button
           mode="outlined"
-          onPress={() => {}} // Will navigate to Login
+          onPress={() => navigation.navigate('Login')}
           style={styles.loginButton}
           contentStyle={styles.buttonContent}
           labelStyle={styles.loginButtonLabel}

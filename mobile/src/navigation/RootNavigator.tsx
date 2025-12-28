@@ -10,10 +10,10 @@ import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { useAuthStore } from '../store/authStore';
 import { RootStackParamList } from '../types/navigation.types';
 
-// Import navigators (we'll create these next)
-// import AuthNavigator from './AuthNavigator';
-// import SocietyNavigator from './SocietyNavigator';
-// import ContractorNavigator from './ContractorNavigator';
+// Import navigators
+import AuthNavigator from './AuthNavigator';
+// import SocietyNavigator from './SocietyNavigator'; // TODO: Create this
+// import ContractorNavigator from './ContractorNavigator'; // TODO: Create this
 
 // Temporary placeholder screens
 import WelcomeScreen from '../screens/auth/WelcomeScreen';
@@ -48,7 +48,7 @@ const RootNavigator: React.FC = () => {
           // Auth Stack - for non-authenticated users
           <Stack.Screen 
             name="Auth" 
-            component={WelcomeScreen} // Temporary - will be AuthNavigator
+            component={AuthNavigator}
           />
         ) : user?.role === 'Society' ? (
           // Society Stack - for society users
