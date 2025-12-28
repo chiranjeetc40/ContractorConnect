@@ -13,9 +13,53 @@ from app.core.database import init_db
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
-    description="Backend API for ContractorConnect - Connecting building societies with contractors",
-    docs_url="/docs" if settings.debug else None,
-    redoc_url="/redoc" if settings.debug else None,
+    description="""
+    ## ContractorConnect API
+    
+    Backend API for ContractorConnect - Connecting building societies with civil work contractors.
+    
+    ### Features
+    
+    * **Authentication**: OTP-based login for contractors and societies
+    * **Request Management**: Post, browse, and manage civil work requests
+    * **Bidding System**: Contractors can bid on requests
+    * **Profile Management**: Manage user profiles and work history
+    * **File Upload**: Upload images and documents
+    
+    ### Authentication
+    
+    Most endpoints require JWT authentication. Get your token from:
+    - `/api/v1/auth/register` - Register new user
+    - `/api/v1/auth/login` - Login with phone/OTP
+    
+    Then include the token in requests:
+    ```
+    Authorization: Bearer <your_token>
+    ```
+    
+    ### Documentation
+    
+    * **Swagger UI**: Interactive API documentation (this page)
+    * **ReDoc**: Alternative documentation at `/redoc`
+    * **OpenAPI Schema**: Raw schema at `/openapi.json`
+    """,
+    docs_url="/docs",  # Always enabled for easy testing
+    redoc_url="/redoc",
+    openapi_tags=[
+        {"name": "Root", "description": "Root and health check endpoints"},
+        {"name": "Authentication", "description": "User registration, login, and OTP verification"},
+        {"name": "Users", "description": "User profile management"},
+        {"name": "Requests", "description": "Civil work request management"},
+        {"name": "Bids", "description": "Bidding on requests"},
+        {"name": "Admin", "description": "Admin operations"},
+    ],
+    contact={
+        "name": "ContractorConnect Support",
+        "email": "support@contractorconnect.com",
+    },
+    license_info={
+        "name": "Proprietary",
+    },
 )
 
 # Configure CORS

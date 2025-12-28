@@ -11,21 +11,32 @@ Ensure you have the following installed:
   python --version
   ```
 
-- **PostgreSQL 13 or higher**
-  - Download from: https://www.postgresql.org/download/windows/
-  - During installation, remember your postgres password
+- **uv (Fast Python Package Manager)**
+  ```powershell
+  # Install uv
+  pip install uv
+  
+  # Verify installation
+  uv --version
+  ```
+
+- **PostgreSQL** (We'll use Render's hosted PostgreSQL)
+  - No local installation needed for production
+  - Optional: Install locally for development/testing
 
 - **Redis (optional for Phase 1, required for Phase 2)**
-  - Download from: https://github.com/microsoftarchive/redis/releases
-  - Or use Docker: `docker run -d -p 6379:6379 redis`
+  - Will use Render's Redis addon when needed
 
 ### Step 2: Database Setup
 
-1. **Start PostgreSQL service**
+**Option A: Use Render PostgreSQL (Recommended for Production)**
 
-2. **Create database and user:**
+You'll provide the connection details from your Render PostgreSQL instance.
+We'll configure this in the `.env` file in Step 4.
 
-Open PowerShell and run:
+**Option B: Local PostgreSQL (Optional for Development)**
+
+If you want to test locally:
 ```powershell
 # Connect to PostgreSQL (enter password when prompted)
 psql -U postgres
@@ -37,21 +48,21 @@ GRANT ALL PRIVILEGES ON DATABASE contractorconnect_dev TO contractor_user;
 \q
 ```
 
-### Step 3: Backend Setup
+### Step 3: Backend Setup with UV
 
 1. **Navigate to backend directory:**
 ```powershell
 cd D:\Code\workspace\ContractorConnect\backend
 ```
 
-2. **Create virtual environment:**
+2. **Create virtual environment with uv:**
 ```powershell
-python -m venv venv
+uv venv
 ```
 
 3. **Activate virtual environment:**
 ```powershell
-.\venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1
 ```
 
 If you get an execution policy error, run:
@@ -59,19 +70,14 @@ If you get an execution policy error, run:
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
-4. **Upgrade pip:**
+4. **Install dependencies with uv:**
 ```powershell
-python -m pip install --upgrade pip
-```
-
-5. **Install dependencies:**
-```powershell
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 ```
 
 For development (includes testing tools):
 ```powershell
-pip install -r requirements-dev.txt
+uv pip install -r requirements-dev.txt
 ```
 
 ### Step 4: Configuration
@@ -83,16 +89,26 @@ copy .env.example .env
 
 2. **Edit .env file:**
 
-Open `.env` in your editor and update:
+Open `.env` in your editor and update with your Render PostgreSQL details:
 
 ```env
-# Minimum required changes:
-DATABASE_URL=postgresql://contractor_user:contractor_pass@localhost:5432/contractorconnect_dev
+# Database Configuration (from Render PostgreSQL)
+# Format: postgresql://user:password@host:port/database
+DATABASE_URL=postgresql://your_render_user:your_render_password@your_render_host:5432/your_render_database
 
-# Generate a secure secret key (use this command or generate your own):
+# You can get this from Render Dashboard -> Your PostgreSQL -> Connection Details
+# Example: postgresql://contractor_user:abc123xyz@dpg-xxxxx.oregon-postgres.render.com/contractorconnect
+
+# Generate a secure secret key
 # python -c "import secrets; print(secrets.token_urlsafe(32))"
 SECRET_KEY=your-generated-secret-key-here-at-least-32-characters-long
+
+# Environment
+ENVIRONMENT=development
+DEBUG=True
 ```
+
+**Note:** Keep your `.env` file secure and never commit it to Git!
 
 ### Step 5: Database Migrations
 
