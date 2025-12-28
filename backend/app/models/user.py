@@ -81,10 +81,8 @@ class User(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     last_login_at = Column(DateTime, nullable=True)
     
-    # Relationships (to be added when other models are created)
-    # otps = relationship("OTP", back_populates="user", cascade="all, delete-orphan")
-    # requests = relationship("Request", back_populates="society", foreign_keys="Request.society_id")
-    # bids = relationship("Bid", back_populates="contractor")
+    # Relationships
+    contractor_bids = relationship("Bid", foreign_keys="Bid.contractor_id", back_populates="contractor", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<User(id={self.id}, phone={self.phone_number}, role={self.role})>"

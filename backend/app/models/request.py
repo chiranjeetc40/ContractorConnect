@@ -103,7 +103,7 @@ class Request(Base):
     # Relationships
     society = relationship("User", foreign_keys=[society_id], backref="posted_requests")
     assigned_contractor = relationship("User", foreign_keys=[assigned_contractor_id], backref="assigned_requests")
-    # bids = relationship("Bid", back_populates="request", cascade="all, delete-orphan")
+    bids = relationship("Bid", back_populates="request", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<Request(id={self.id}, title={self.title}, status={self.status})>"
