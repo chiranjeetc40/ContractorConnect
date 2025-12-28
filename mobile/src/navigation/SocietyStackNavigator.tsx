@@ -11,7 +11,7 @@ import { SocietyStackParamList } from '../types/navigation.types';
 // Import screens
 import SocietyHomeScreen from '../screens/society/SocietyHomeScreen';
 import CreateRequestScreen from '../screens/society/CreateRequestScreen';
-// import RequestDetailsScreen from '../screens/society/RequestDetailsScreen'; // TODO
+import RequestDetailsScreen from '../screens/society/RequestDetailsScreen';
 // import BidListScreen from '../screens/society/BidListScreen'; // TODO
 // import BidDetailsScreen from '../screens/society/BidDetailsScreen'; // TODO
 
@@ -43,6 +43,14 @@ const SocietyStackNavigator: React.FC = () => {
         component={CreateRequestScreen}
         options={{
           title: 'New Request',
+          headerBackTitle: 'Back',
+        }}
+      />
+      <Stack.Screen
+        name="RequestDetails"
+        component={RequestDetailsScreen}
+        options={{
+          title: 'Request Details',
           headerBackTitle: 'Back',
         }}
       />

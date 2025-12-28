@@ -107,9 +107,7 @@ const SocietyHomeScreen: React.FC<Props> = ({ navigation }) => {
 
   // Handle request press
   const handleRequestPress = (requestId: string) => {
-    // TODO: Navigate to Request Details screen
-    // navigation.navigate('RequestDetails', { requestId });
-    console.log('Navigate to request:', requestId);
+    navigation.navigate('RequestDetails', { requestId });
   };
 
   // Handle create new request
