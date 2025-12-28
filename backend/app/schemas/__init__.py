@@ -19,6 +19,14 @@ from app.schemas.token import (
     TokenData,
     RefreshToken,
 )
+from app.schemas.request import (
+    RequestCreate,
+    RequestUpdate,
+    RequestStatusUpdate,
+    RequestResponse,
+    RequestListResponse,
+    RequestSearchFilters,
+)
 
 __all__ = [
     "UserCreate",
@@ -32,4 +40,10 @@ __all__ = [
     "Token",
     "TokenData",
     "RefreshToken",
+    "RequestCreate",
+    "RequestUpdate",
+    "RequestStatusUpdate",
+    "RequestResponse",
+    "RequestListResponse",
+    "RequestSearchFilters",
 ]

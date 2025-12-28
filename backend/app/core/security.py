@@ -5,10 +5,14 @@ Includes JWT token handling, password hashing, and permission checking.
 
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.database import get_db
 
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -127,3 +131,58 @@ def verify_token_type(payload: Dict[str, Any], token_type: str) -> bool:
         True if token type matches, False otherwise
     """
     return payload.get("type") == token_type
+
+
+# HTTP Bearer security scheme for Swagger UI
+security = HTTPBearer()
+
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+):
+    """
+    Dependency to get current authenticated user from JWT token.
+    
+    Args:
+        credentials: HTTP Authorization credentials with Bearer token
+        db: Database session
+        
+    Returns:
+        Current authenticated User object
+        
+    Raises:
+        HTTPException: If token is invalid or user not found
+    """
+    from app.models.user import User
+    
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    try:
+        token = credentials.credentials
+        payload = decode_token(token)
+        
+        if payload is None:
+            raise credentials_exception
+        
+        # Verify it's an access token
+        if not verify_token_type(payload, "access"):
+            raise credentials_exception
+        
+        user_id: int = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+            
+    except (JWTError, AttributeError):
+        raise credentials_exception
+    
+    # Get user from database
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None:
+        raise credentials_exception
+    
+    return user
