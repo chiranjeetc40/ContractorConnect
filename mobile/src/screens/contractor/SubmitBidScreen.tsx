@@ -18,7 +18,9 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Divider } from 'react-native-paper';
 import { theme } from '../../theme/theme';
 import { ContractorStackScreenProps } from '../../types/navigation.types';
-import { RequestStatus } from '../../types/models.types';
+import { Request, RequestStatus } from '../../types/models.types';
+import { requestAPI, bidAPI } from '../../api';
+import type { BidStatistics } from '../../api/bid.api';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
@@ -38,19 +40,6 @@ interface FormErrors {
   estimatedDays?: string;
 }
 
-interface MockRequest {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  status: RequestStatus;
-  locationCity: string;
-  budgetMin?: number;
-  budgetMax?: number;
-  societyName: string;
-  datePosted: Date;
-}
-
 const SubmitBidScreen: React.FC<Props> = ({ route, navigation }) => {
   const { requestId } = route.params;
   
@@ -63,41 +52,16 @@ const SubmitBidScreen: React.FC<Props> = ({ route, navigation }) => {
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingRequest, setIsLoadingRequest] = useState(true);
-
-  // TODO: Replace with actual API data
-  const [request, setRequest] = useState<MockRequest>({
-    id: requestId,
-    title: 'Fix Leaking Pipe in Bathroom',
-    description: 'There is a major leak in the bathroom sink pipe. Water is dripping continuously and needs immediate attention. The pipe appears to be old and may need replacement.',
-    category: 'Plumbing',
-    status: RequestStatus.OPEN,
-    locationCity: 'Mumbai',
-    budgetMin: 2000,
-    budgetMax: 5000,
-    societyName: 'Sunshine Apartments',
-    datePosted: new Date(Date.now() - 2 * 60 * 60 * 1000),
+  const [request, setRequest] = useState<Request | null>(null);
+  const [bidStats, setBidStats] = useState<BidStatistics>({
+    total_bids: 0,
+    average_bid: 0,
+    lowest_bid: 0,
+    highest_bid: 0,
+    pending_count: 0,
+    accepted_count: 0,
+    rejected_count: 0,
   });
-
-  // Mock existing bids for statistics
-  const [existingBids] = useState([
-    { amount: 3500 },
-    { amount: 4200 },
-    { amount: 2800 },
-  ]);
-
-  // Calculate bid statistics
-  const bidStats = {
-    count: existingBids.length,
-    avgAmount: existingBids.length > 0
-      ? Math.round(existingBids.reduce((sum, bid) => sum + bid.amount, 0) / existingBids.length)
-      : 0,
-    minAmount: existingBids.length > 0
-      ? Math.min(...existingBids.map(bid => bid.amount))
-      : 0,
-    maxAmount: existingBids.length > 0
-      ? Math.max(...existingBids.map(bid => bid.amount))
-      : 0,
-  };
 
   useEffect(() => {
     loadRequestDetails();
@@ -106,15 +70,31 @@ const SubmitBidScreen: React.FC<Props> = ({ route, navigation }) => {
   const loadRequestDetails = async () => {
     setIsLoadingRequest(true);
     try {
-      // TODO: Call API to fetch request details
-      // const data = await requestAPI.getRequestById(requestId);
-      // setRequest(data);
+      // Load request details
+      const requestData = await requestAPI.getRequestById(requestId);
+      setRequest(requestData);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    } catch (error) {
+      // Load bid statistics
+      try {
+        const stats = await bidAPI.getBidStatistics(requestId);
+        setBidStats(stats);
+      } catch (statsError) {
+        // Statistics might not be available if no bids yet
+        console.log('No bid statistics available yet');
+      }
+    } catch (error: any) {
       console.error('Load request error:', error);
-      Alert.alert('Error', 'Failed to load request details');
+      
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.message ||
+                          'Failed to load request details';
+      
+      Alert.alert('Error', errorMessage, [
+        {
+          text: 'Go Back',
+          onPress: () => navigation.goBack(),
+        },
+      ]);
     } finally {
       setIsLoadingRequest(false);
     }
@@ -140,7 +120,7 @@ const SubmitBidScreen: React.FC<Props> = ({ route, navigation }) => {
       newErrors.bidAmount = 'Must be a valid number';
     } else if (Number(formData.bidAmount) <= 0) {
       newErrors.bidAmount = 'Amount must be greater than 0';
-    } else if (request.budgetMax && Number(formData.bidAmount) > request.budgetMax * 1.5) {
+    } else if (request?.budget_max && Number(formData.bidAmount) > request.budget_max * 1.5) {
       newErrors.bidAmount = 'Amount seems too high for this request';
     }
 
@@ -172,16 +152,13 @@ const SubmitBidScreen: React.FC<Props> = ({ route, navigation }) => {
     setIsLoading(true);
 
     try {
-      // TODO: Call API to submit bid
-      // const response = await bidAPI.submitBid({
-      //   request_id: requestId,
-      //   bid_amount: Number(formData.bidAmount),
-      //   proposal: formData.proposal.trim(),
-      //   estimated_completion_days: formData.estimatedDays ? Number(formData.estimatedDays) : undefined,
-      // });
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Call API to submit bid
+      const response = await bidAPI.submitBid({
+        request_id: requestId,
+        bid_amount: Number(formData.bidAmount),
+        proposal: formData.proposal.trim(),
+        estimated_completion_days: formData.estimatedDays ? Number(formData.estimatedDays) : undefined,
+      });
 
       Alert.alert(
         'Success',
@@ -193,12 +170,14 @@ const SubmitBidScreen: React.FC<Props> = ({ route, navigation }) => {
           },
         ]
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error('Submit bid error:', error);
-      Alert.alert(
-        'Error',
-        'Failed to submit bid. Please try again.'
-      );
+      
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.message ||
+                          'Failed to submit bid. Please try again.';
+      
+      Alert.alert('Error', errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -206,6 +185,10 @@ const SubmitBidScreen: React.FC<Props> = ({ route, navigation }) => {
 
   if (isLoadingRequest) {
     return <Loading message="Loading request details..." />;
+  }
+
+  if (!request) {
+    return <Loading message="Request not found" />;
   }
 
   return (
@@ -241,7 +224,7 @@ const SubmitBidScreen: React.FC<Props> = ({ route, navigation }) => {
                   size={16}
                   color={theme.colors.text.secondary}
                 />
-                <Text style={styles.infoText}>{request.societyName}</Text>
+                <Text style={styles.infoText}>{request.society?.full_name || 'N/A'}</Text>
               </View>
               <View style={styles.infoRow}>
                 <MaterialCommunityIcons
@@ -249,7 +232,7 @@ const SubmitBidScreen: React.FC<Props> = ({ route, navigation }) => {
                   size={16}
                   color={theme.colors.text.secondary}
                 />
-                <Text style={styles.infoText}>{request.locationCity}</Text>
+                <Text style={styles.infoText}>{request.location_city}</Text>
               </View>
             </View>
 
@@ -257,38 +240,38 @@ const SubmitBidScreen: React.FC<Props> = ({ route, navigation }) => {
               {request.description}
             </Text>
 
-            {(request.budgetMin || request.budgetMax) && (
+            {(request.budget_min || request.budget_max) && (
               <View style={styles.budgetInfo}>
                 <Text style={styles.budgetLabel}>Budget Range:</Text>
                 <Text style={styles.budgetValue}>
-                  {request.budgetMin && request.budgetMax
-                    ? `₹${request.budgetMin.toLocaleString('en-IN')} - ₹${request.budgetMax.toLocaleString('en-IN')}`
-                    : request.budgetMin
-                    ? `₹${request.budgetMin.toLocaleString('en-IN')}+`
-                    : `Up to ₹${request.budgetMax?.toLocaleString('en-IN')}`}
+                  {request.budget_min && request.budget_max
+                    ? `₹${request.budget_min.toLocaleString('en-IN')} - ₹${request.budget_max.toLocaleString('en-IN')}`
+                    : request.budget_min
+                    ? `₹${request.budget_min.toLocaleString('en-IN')}+`
+                    : `Up to ₹${request.budget_max?.toLocaleString('en-IN')}`}
                 </Text>
               </View>
             )}
           </View>
 
           {/* Bid Statistics */}
-          {existingBids.length > 0 && (
+          {bidStats.total_bids > 0 && (
             <View style={styles.statsCard}>
               <Text style={styles.statsTitle}>
-                💡 Bid Statistics ({bidStats.count} {bidStats.count === 1 ? 'bid' : 'bids'})
+                💡 Bid Statistics ({bidStats.total_bids} {bidStats.total_bids === 1 ? 'bid' : 'bids'})
               </Text>
               <View style={styles.statsGrid}>
                 <View style={styles.statItem}>
                   <Text style={styles.statLabel}>Average</Text>
-                  <Text style={styles.statValue}>₹{bidStats.avgAmount.toLocaleString('en-IN')}</Text>
+                  <Text style={styles.statValue}>₹{Math.round(bidStats.average_bid).toLocaleString('en-IN')}</Text>
                 </View>
                 <View style={styles.statItem}>
                   <Text style={styles.statLabel}>Lowest</Text>
-                  <Text style={styles.statValue}>₹{bidStats.minAmount.toLocaleString('en-IN')}</Text>
+                  <Text style={styles.statValue}>₹{bidStats.lowest_bid.toLocaleString('en-IN')}</Text>
                 </View>
                 <View style={styles.statItem}>
                   <Text style={styles.statLabel}>Highest</Text>
-                  <Text style={styles.statValue}>₹{bidStats.maxAmount.toLocaleString('en-IN')}</Text>
+                  <Text style={styles.statValue}>₹{bidStats.highest_bid.toLocaleString('en-IN')}</Text>
                 </View>
               </View>
             </View>
@@ -309,7 +292,7 @@ const SubmitBidScreen: React.FC<Props> = ({ route, navigation }) => {
               placeholder="Enter your bid amount"
               leftIcon="currency-inr"
               keyboardType="number-pad"
-              helperText={bidStats.avgAmount > 0 ? `Avg: ₹${bidStats.avgAmount.toLocaleString('en-IN')}` : undefined}
+              helperText={bidStats.average_bid > 0 ? `Avg: ₹${Math.round(bidStats.average_bid).toLocaleString('en-IN')}` : undefined}
             />
 
             <Input

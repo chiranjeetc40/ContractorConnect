@@ -152,7 +152,7 @@ All auth screens now use real API calls:
   - `requestAPI.cancelRequest()` - Cancel request
   - `requestAPI.deleteRequest()` - Delete request
 
-### 5. Contractor Screens Integration ⏳ PARTIAL
+### 5. Contractor Screens Integration ✅ COMPLETE
 
 #### **BrowseRequestsScreen** ✅
 - Imports: `requestAPI`, `Request` type
@@ -166,16 +166,40 @@ All auth screens now use real API calls:
 - State: `isLoading` starts as `true`
 - Filter: Only OPEN requests (backend handles this)
 
-#### **SubmitBidScreen** (TODO)
-- Need to integrate:
+#### **SubmitBidScreen** ✅ COMPLETE
+- Imports: `requestAPI`, `bidAPI`, `Request`, `BidStatistics` types
+- API Calls:
   - `requestAPI.getRequestById()` - Load request details
   - `bidAPI.getBidStatistics()` - Get existing bid stats
-  - `bidAPI.submitBid()` - Submit the bid
+  - `bidAPI.submitBid()` - Submit new bid
+- Changes:
+  - Removed MockRequest interface and mock data
+  - Changed state to use `Request | null` type
+  - Imported `BidStatistics` from `bid.api.ts`
+  - Added `loadRequestDetails()` with dual API calls
+  - Updated `handleSubmit()` to call real API
+  - Fixed field names: `budget_max`, `location_city`, `society.full_name`
+  - Fixed statistics fields: `total_bids`, `average_bid`, `lowest_bid`, `highest_bid`
+  - Added proper error handling with user-friendly messages
+  - Added null check for request state
+- Loading States: `isLoadingRequest` for initial load, `isLoading` for submit
 
-#### **MyBidsScreen** (TODO)
-- Need to integrate:
-  - `bidAPI.getMyBids()` - Load all bids
-  - `bidAPI.withdrawBid()` - Withdraw action
+#### **MyBidsScreen** ✅ COMPLETE
+- Imports: `bidAPI`, `Bid` type
+- API Calls:
+  - `bidAPI.getMyBids()` - Load all contractor's bids
+  - `bidAPI.withdrawBid()` - Withdraw pending bid
+- Changes:
+  - Removed MockBid interface and mock data (5 sample bids, 75 lines)
+  - Changed state to use `Bid[]` type
+  - Added `useEffect` to load on mount
+  - Implemented `loadBids()` with error handling
+  - Updated `handleRefresh()` to call real API
+  - Updated `handleWithdrawBid()` to call API and reload
+  - Fixed field names: `amount` (not bidAmount), `created_at`, `request?.title`, `request?.society?.full_name`
+  - Fixed statistics calculations to use `Bid.amount`
+  - Added null checks for relationships
+- State: `isLoading` starts as `true`
 
 ## API Integration Pattern
 
@@ -255,15 +279,38 @@ interface RequestsResponse {
 
 ## Testing Strategy
 
-### Authentication Flow:
+### Authentication Flow: ✅ COMPLETE
 1. Register → Should send OTP → Verify → Auto-login
 2. Login → Should check verification → Navigate based on role
 3. OTP → Auto-submit on 6 digits → Resend working
 
-### Society Flow:
-1. Home → Load requests → Display list
-2. Create Request → Submit → Navigate back → Refresh list
-3. Request Details → Load bids → Accept bid
+### Society Flow: ✅ COMPLETE
+1. Home → Load requests → Display list ✅
+2. Create Request → Submit → Navigate back → Refresh list ✅
+3. Request Details → Load bids → Accept bid ✅
+4. Request Details → Cancel/Delete request ✅
+
+### Contractor Flow: ✅ COMPLETE
+1. Browse → Load OPEN requests → Navigate to details ✅
+2. Submit Bid → Load request/stats → Submit bid ✅
+3. My Bids → Load all bids → Filter by status ✅
+4. My Bids → Withdraw pending bid ✅
+
+## 🎉 INTEGRATION COMPLETE - 100% MVP
+
+All screens now use real backend APIs. Mock data removed from all screens. Type-safe integration with proper error handling throughout.
+
+### Summary of Changes:
+- **3 API modules created**: request.api.ts, bid.api.ts, auth.api.ts
+- **10 screens integrated**: All auth screens + Society screens + Contractor screens
+- **~500 lines of mock data removed**
+- **15+ API endpoints integrated**
+- **Full error handling added** across all screens
+- **Type safety maintained** throughout with proper TypeScript types
+
+## Remaining Tasks
+
+### High Priority:
 
 ### Contractor Flow:
 1. Browse → Load OPEN requests only

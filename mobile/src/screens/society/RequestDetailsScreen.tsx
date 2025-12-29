@@ -17,7 +17,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Divider, Menu } from 'react-native-paper';
 import { theme } from '../../theme/theme';
 import { SocietyStackScreenProps } from '../../types/navigation.types';
-import { RequestStatus, BidStatus } from '../../types/models.types';
+import { Request, Bid, RequestStatus, BidStatus } from '../../types/models.types';
+import { requestAPI, bidAPI } from '../../api';
 import StatusChip from '../../components/common/StatusChip';
 import BidCard from '../../components/common/BidCard';
 import EmptyState from '../../components/common/EmptyState';
@@ -26,33 +27,6 @@ import Button from '../../components/common/Button';
 
 type Props = SocietyStackScreenProps<'RequestDetails'>;
 
-interface MockBid {
-  id: string;
-  contractorName: string;
-  contractorAvatar?: string;
-  bidAmount: number;
-  proposalExcerpt: string;
-  status: BidStatus;
-  dateSubmitted: Date;
-  rating?: number;
-}
-
-interface MockRequest {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  status: RequestStatus;
-  locationAddress: string;
-  locationCity: string;
-  locationState: string;
-  locationPincode: string;
-  budgetMin?: number;
-  budgetMax?: number;
-  datePosted: Date;
-  dateUpdated: Date;
-}
-
 const RequestDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
   const { requestId } = route.params;
   
@@ -60,53 +34,8 @@ const RequestDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<'details' | 'bids'>('details');
-
-  // TODO: Replace with actual API data
-  const [request, setRequest] = useState<MockRequest>({
-    id: requestId,
-    title: 'Fix Leaking Pipe in Bathroom',
-    description: 'There is a major leak in the bathroom sink pipe. Water is dripping continuously and needs immediate attention. The pipe appears to be old and may need replacement. Looking for an experienced plumber who can fix this issue today or tomorrow.',
-    category: 'Plumbing',
-    status: RequestStatus.OPEN,
-    locationAddress: 'Building A, Wing 3, Floor 5',
-    locationCity: 'Mumbai',
-    locationState: 'Maharashtra',
-    locationPincode: '400001',
-    budgetMin: 2000,
-    budgetMax: 5000,
-    datePosted: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    dateUpdated: new Date(Date.now() - 1 * 60 * 60 * 1000),
-  });
-
-  const [bids, setBids] = useState<MockBid[]>([
-    {
-      id: '1',
-      contractorName: 'Rajesh Kumar',
-      bidAmount: 3500,
-      proposalExcerpt: 'I have 10 years of experience in plumbing. I can fix this issue within 2 hours with quality materials.',
-      status: BidStatus.PENDING,
-      dateSubmitted: new Date(Date.now() - 1 * 60 * 60 * 1000),
-      rating: 4.5,
-    },
-    {
-      id: '2',
-      contractorName: 'Amit Patel',
-      bidAmount: 4200,
-      proposalExcerpt: 'Expert plumber with certified materials. Will provide 6 months warranty on the work.',
-      status: BidStatus.PENDING,
-      dateSubmitted: new Date(Date.now() - 30 * 60 * 1000),
-      rating: 4.8,
-    },
-    {
-      id: '3',
-      contractorName: 'Suresh Singh',
-      bidAmount: 2800,
-      proposalExcerpt: 'Quick and affordable service. Available immediately to fix your plumbing issue.',
-      status: BidStatus.PENDING,
-      dateSubmitted: new Date(Date.now() - 10 * 60 * 1000),
-      rating: 4.2,
-    },
-  ]);
+  const [request, setRequest] = useState<Request | null>(null);
+  const [bids, setBids] = useState<Bid[]>([]);
 
   // Load data on mount
   useEffect(() => {
@@ -116,19 +45,21 @@ const RequestDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
   const loadRequestDetails = async () => {
     setIsLoading(true);
     try {
-      // TODO: Call API to fetch request details and bids
-      // const [requestData, bidsData] = await Promise.all([
-      //   requestAPI.getRequestById(requestId),
-      //   bidAPI.getBidsByRequestId(requestId),
-      // ]);
-      // setRequest(requestData);
-      // setBids(bidsData);
+      // Load request details with bids
+      const requestData = await requestAPI.getRequestById(requestId);
+      setRequest(requestData);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    } catch (error) {
+      // Fetch bids separately (backend may include them in response, but type doesn't guarantee it)
+      const bidsResponse = await bidAPI.getRequestBids(requestId);
+      setBids(bidsResponse);
+    } catch (error: any) {
       console.error('Load request error:', error);
-      Alert.alert('Error', 'Failed to load request details');
+      
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.message ||
+                          'Failed to load request details';
+      
+      Alert.alert('Error', errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -151,13 +82,19 @@ const RequestDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
           text: 'Accept',
           onPress: async () => {
             try {
-              // TODO: Call API to accept bid
-              // await bidAPI.acceptBid(bidId);
+              // Call API to accept bid
+              await bidAPI.acceptBid(bidId);
               
               Alert.alert('Success', 'Bid accepted successfully!');
-              await loadRequestDetails();
-            } catch (error) {
-              Alert.alert('Error', 'Failed to accept bid');
+              await loadRequestDetails(); // Reload to show updated status
+            } catch (error: any) {
+              console.error('Accept bid error:', error);
+              
+              const errorMessage = error.response?.data?.detail || 
+                                  error.response?.data?.message ||
+                                  'Failed to accept bid';
+              
+              Alert.alert('Error', errorMessage);
             }
           },
         },
@@ -169,7 +106,7 @@ const RequestDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
   const handleEditRequest = () => {
     setMenuVisible(false);
     Alert.alert('Edit Request', 'Edit functionality coming soon');
-    // TODO: Navigate to edit screen
+    // TODO: Navigate to edit screen (can implement in future)
   };
 
   const handleCancelRequest = () => {
@@ -184,11 +121,23 @@ const RequestDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              // TODO: Call API to cancel request
-              Alert.alert('Cancelled', 'Request has been cancelled');
-              navigation.goBack();
-            } catch (error) {
-              Alert.alert('Error', 'Failed to cancel request');
+              // Call API to cancel request
+              await requestAPI.cancelRequest(requestId);
+              
+              Alert.alert('Cancelled', 'Request has been cancelled', [
+                {
+                  text: 'OK',
+                  onPress: () => navigation.goBack(),
+                },
+              ]);
+            } catch (error: any) {
+              console.error('Cancel request error:', error);
+              
+              const errorMessage = error.response?.data?.detail || 
+                                  error.response?.data?.message ||
+                                  'Failed to cancel request';
+              
+              Alert.alert('Error', errorMessage);
             }
           },
         },
@@ -208,11 +157,23 @@ const RequestDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              // TODO: Call API to delete request
-              Alert.alert('Deleted', 'Request has been deleted');
-              navigation.goBack();
-            } catch (error) {
-              Alert.alert('Error', 'Failed to delete request');
+              // Call API to delete request
+              await requestAPI.deleteRequest(requestId);
+              
+              Alert.alert('Deleted', 'Request has been deleted', [
+                {
+                  text: 'OK',
+                  onPress: () => navigation.goBack(),
+                },
+              ]);
+            } catch (error: any) {
+              console.error('Delete request error:', error);
+              
+              const errorMessage = error.response?.data?.detail || 
+                                  error.response?.data?.message ||
+                                  'Failed to delete request';
+              
+              Alert.alert('Error', errorMessage);
             }
           },
         },
@@ -224,13 +185,13 @@ const RequestDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
   const bidStats = {
     count: bids.length,
     avgAmount: bids.length > 0
-      ? bids.reduce((sum, bid) => sum + bid.bidAmount, 0) / bids.length
+      ? bids.reduce((sum, bid) => sum + bid.amount, 0) / bids.length
       : 0,
     minAmount: bids.length > 0
-      ? Math.min(...bids.map(bid => bid.bidAmount))
+      ? Math.min(...bids.map(bid => bid.amount))
       : 0,
     maxAmount: bids.length > 0
-      ? Math.max(...bids.map(bid => bid.bidAmount))
+      ? Math.max(...bids.map(bid => bid.amount))
       : 0,
   };
 
@@ -246,139 +207,161 @@ const RequestDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
   };
 
   // Render request details tab
-  const renderDetailsTab = () => (
-    <View style={styles.tabContent}>
-      {/* Description */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Description</Text>
-        <Text style={styles.description}>{request.description}</Text>
-      </View>
-
-      {/* Location */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <MaterialCommunityIcons
-            name="map-marker"
-            size={20}
-            color={theme.colors.primary.main}
-          />
-          <Text style={styles.sectionTitle}>Location</Text>
+  const renderDetailsTab = () => {
+    if (!request) return null;
+    
+    return (
+      <View style={styles.tabContent}>
+        {/* Description */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Description</Text>
+          <Text style={styles.description}>{request.description}</Text>
         </View>
-        <Text style={styles.infoText}>{request.locationAddress}</Text>
-        <Text style={styles.infoText}>
-          {request.locationCity}, {request.locationState} - {request.locationPincode}
-        </Text>
-      </View>
 
-      {/* Budget */}
-      {(request.budgetMin || request.budgetMax) && (
+        {/* Location */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <MaterialCommunityIcons
-              name="cash"
+              name="map-marker"
               size={20}
-              color={theme.colors.success as any}
+              color={theme.colors.primary.main}
             />
-            <Text style={styles.sectionTitle}>Budget Range</Text>
+            <Text style={styles.sectionTitle}>Location</Text>
           </View>
-          <Text style={styles.budgetText}>
-            {request.budgetMin && request.budgetMax
-              ? `₹${request.budgetMin.toLocaleString('en-IN')} - ₹${request.budgetMax.toLocaleString('en-IN')}`
-              : request.budgetMin
-              ? `₹${request.budgetMin.toLocaleString('en-IN')}+`
-              : `Up to ₹${request.budgetMax?.toLocaleString('en-IN')}`}
+          <Text style={styles.infoText}>{request.location_address}</Text>
+          <Text style={styles.infoText}>
+            {request.location_city}, {request.location_state} - {request.location_pincode}
           </Text>
         </View>
-      )}
 
-      {/* Timestamps */}
-      <View style={styles.section}>
-        <View style={styles.timestampRow}>
-          <MaterialCommunityIcons
-            name="clock-outline"
-            size={16}
-            color={theme.colors.text.secondary}
-          />
-          <Text style={styles.timestampLabel}>Posted:</Text>
-          <Text style={styles.timestampValue}>{formatDate(request.datePosted)}</Text>
-        </View>
-        <View style={styles.timestampRow}>
-          <MaterialCommunityIcons
-            name="update"
-            size={16}
-            color={theme.colors.text.secondary}
-          />
-          <Text style={styles.timestampLabel}>Updated:</Text>
-          <Text style={styles.timestampValue}>{formatDate(request.dateUpdated)}</Text>
-        </View>
-      </View>
-    </View>
-  );
+        {/* Budget */}
+        {(request.budget_min || request.budget_max) && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <MaterialCommunityIcons
+                name="cash"
+                size={20}
+                color={theme.colors.success as any}
+              />
+              <Text style={styles.sectionTitle}>Budget Range</Text>
+            </View>
+            <Text style={styles.budgetText}>
+              {request.budget_min && request.budget_max
+                ? `₹${request.budget_min.toLocaleString('en-IN')} - ₹${request.budget_max.toLocaleString('en-IN')}`
+                : request.budget_min
+                ? `₹${request.budget_min.toLocaleString('en-IN')}+`
+                : `Up to ₹${request.budget_max?.toLocaleString('en-IN')}`}
+            </Text>
+          </View>
+        )}
 
-  // Render bids tab
-  const renderBidsTab = () => (
-    <View style={styles.tabContent}>
-      {/* Bid Statistics */}
-      {bids.length > 0 && (
-        <View style={styles.statsCard}>
-          <Text style={styles.statsTitle}>Bid Statistics</Text>
-          <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{bidStats.count}</Text>
-              <Text style={styles.statLabel}>Total Bids</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>
-                ₹{Math.round(bidStats.avgAmount).toLocaleString('en-IN')}
-              </Text>
-              <Text style={styles.statLabel}>Average</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>
-                ₹{bidStats.minAmount.toLocaleString('en-IN')}
-              </Text>
-              <Text style={styles.statLabel}>Lowest</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>
-                ₹{bidStats.maxAmount.toLocaleString('en-IN')}
-              </Text>
-              <Text style={styles.statLabel}>Highest</Text>
-            </View>
+        {/* Timestamps */}
+        <View style={styles.section}>
+          <View style={styles.timestampRow}>
+            <MaterialCommunityIcons
+              name="clock-outline"
+              size={16}
+              color={theme.colors.text.secondary}
+            />
+            <Text style={styles.timestampLabel}>Posted:</Text>
+            <Text style={styles.timestampValue}>{formatDate(new Date(request.created_at))}</Text>
+          </View>
+          <View style={styles.timestampRow}>
+            <MaterialCommunityIcons
+              name="update"
+              size={16}
+              color={theme.colors.text.secondary}
+            />
+            <Text style={styles.timestampLabel}>Updated:</Text>
+            <Text style={styles.timestampValue}>{formatDate(new Date(request.updated_at))}</Text>
           </View>
         </View>
-      )}
+      </View>
+    );
+  };
 
-      {/* Bid List */}
-      {bids.length > 0 ? (
-        bids.map(bid => (
-          <BidCard
-            key={bid.id}
-            id={bid.id}
-            contractorName={bid.contractorName}
-            contractorAvatar={bid.contractorAvatar}
-            bidAmount={bid.bidAmount}
-            proposalExcerpt={bid.proposalExcerpt}
-            status={bid.status}
-            dateSubmitted={bid.dateSubmitted}
-            rating={bid.rating}
-            onPress={() => Alert.alert('Bid Details', 'Full bid details coming soon')}
-            onAccept={bid.status === BidStatus.PENDING ? () => handleAcceptBid(bid.id) : undefined}
-            showActions={request.status === RequestStatus.OPEN}
+  // Render bids tab
+  const renderBidsTab = () => {
+    if (!request) return null;
+    
+    return (
+      <View style={styles.tabContent}>
+        {/* Bid Statistics */}
+        {bids.length > 0 && (
+          <View style={styles.statsCard}>
+            <Text style={styles.statsTitle}>Bid Statistics</Text>
+            <View style={styles.statsGrid}>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{bidStats.count}</Text>
+                <Text style={styles.statLabel}>Total Bids</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>
+                  ₹{Math.round(bidStats.avgAmount).toLocaleString('en-IN')}
+                </Text>
+                <Text style={styles.statLabel}>Average</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>
+                  ₹{bidStats.minAmount.toLocaleString('en-IN')}
+                </Text>
+                <Text style={styles.statLabel}>Lowest</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>
+                  ₹{bidStats.maxAmount.toLocaleString('en-IN')}
+                </Text>
+                <Text style={styles.statLabel}>Highest</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Bid List */}
+        {bids.length > 0 ? (
+          bids.map(bid => (
+            <BidCard
+              key={bid.id}
+              id={bid.id}
+              contractorName={bid.contractor?.full_name || 'Unknown Contractor'}
+              contractorAvatar={undefined} // TODO: Add avatar_url to User type in backend
+              bidAmount={bid.amount}
+              proposalExcerpt={bid.proposal.substring(0, 100)}
+              status={bid.status}
+              dateSubmitted={new Date(bid.created_at)}
+              rating={undefined} // TODO: Add rating to User type in backend
+              onPress={() => Alert.alert('Bid Details', 'Full bid details coming soon')}
+              onAccept={bid.status === BidStatus.PENDING ? () => handleAcceptBid(bid.id) : undefined}
+              showActions={request.status === RequestStatus.OPEN}
+            />
+          ))
+        ) : (
+          <EmptyState
+            icon="📭"
+            title="No Bids Yet"
+            description="Contractors haven't submitted any bids for this request yet. Check back later!"
           />
-        ))
-      ) : (
-        <EmptyState
-          icon="📭"
-          title="No Bids Yet"
-          description="Contractors haven't submitted any bids for this request yet. Check back later!"
-        />
-      )}
-    </View>
-  );
+        )}
+      </View>
+    );
+  };
 
   if (isLoading) {
     return <Loading message="Loading request details..." />;
+  }
+
+  if (!request) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <EmptyState
+          icon="❌"
+          title="Request Not Found"
+          description="The request you're looking for doesn't exist or has been deleted."
+          actionLabel="Go Back"
+          onAction={() => navigation.goBack()}
+        />
+      </SafeAreaView>
+    );
   }
 
   return (

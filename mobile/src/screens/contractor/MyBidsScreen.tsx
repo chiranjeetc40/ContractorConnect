@@ -3,7 +3,7 @@
  * Contractors can view and manage all their submitted bids
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,80 +15,40 @@ import {
 import { Chip } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../theme/theme';
-import { BidStatus } from '../../types/models.types';
+import { Bid, BidStatus } from '../../types/models.types';
+import { bidAPI } from '../../api';
 import BidCard from '../../components/common/BidCard';
 import EmptyState from '../../components/common/EmptyState';
 import Loading from '../../components/common/Loading';
 
-interface MockBid {
-  id: string;
-  requestTitle: string;
-  societyName: string;
-  bidAmount: number;
-  proposalExcerpt: string;
-  status: BidStatus;
-  dateSubmitted: Date;
-  requestId: string;
-}
-
 const MyBidsScreen: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState<'all' | BidStatus>('all');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [bids, setBids] = useState<Bid[]>([]);
 
-  // TODO: Replace with actual API data
-  const [bids, setBids] = useState<MockBid[]>([
-    {
-      id: '1',
-      requestTitle: 'Fix Leaking Pipe in Bathroom',
-      societyName: 'Sunshine Apartments',
-      bidAmount: 3500,
-      proposalExcerpt: 'I have 10 years of experience in plumbing. I can fix this issue within 2 hours with quality materials.',
-      status: BidStatus.PENDING,
-      dateSubmitted: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      requestId: '1',
-    },
-    {
-      id: '2',
-      requestTitle: 'Electrical Wiring for New Room',
-      societyName: 'Green Valley Society',
-      bidAmount: 18000,
-      proposalExcerpt: 'Certified electrician with 15 years experience. Will provide warranty and use ISI certified materials.',
-      status: BidStatus.ACCEPTED,
-      dateSubmitted: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-      requestId: '2',
-    },
-    {
-      id: '3',
-      requestTitle: 'Painting for Living Room',
-      societyName: 'Royal Heights',
-      bidAmount: 12500,
-      proposalExcerpt: 'Professional painter with portfolio. Will complete work in 3 days with premium Asian Paints.',
-      status: BidStatus.REJECTED,
-      dateSubmitted: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-      requestId: '3',
-    },
-    {
-      id: '4',
-      requestTitle: 'Deep Cleaning of 3BHK Flat',
-      societyName: 'Lake View Residency',
-      bidAmount: 4000,
-      proposalExcerpt: 'Experienced cleaning team with eco-friendly products. Same-day service available.',
-      status: BidStatus.PENDING,
-      dateSubmitted: new Date(Date.now() - 12 * 60 * 60 * 1000),
-      requestId: '4',
-    },
-    {
-      id: '5',
-      requestTitle: 'Carpenter Work for Kitchen Cabinets',
-      societyName: 'Sai Residency',
-      bidAmount: 25000,
-      proposalExcerpt: 'Custom carpentry specialist. Will provide 3D design before starting work.',
-      status: BidStatus.WITHDRAWN,
-      dateSubmitted: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-      requestId: '5',
-    },
-  ]);
+  useEffect(() => {
+    loadBids();
+  }, []);
+
+  // Load bids from API
+  const loadBids = async () => {
+    try {
+      const response = await bidAPI.getMyBids();
+      setBids(response.bids);
+    } catch (error: any) {
+      console.error('Load bids error:', error);
+      
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.message ||
+                          'Failed to load bids';
+      
+      Alert.alert('Error', errorMessage);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
 
   // Filter buttons
   const filters: { label: string; value: 'all' | BidStatus; count: number }[] = [
@@ -106,17 +66,13 @@ const MyBidsScreen: React.FC = () => {
 
   // Sort by date (newest first)
   const sortedBids = [...filteredBids].sort((a, b) => 
-    b.dateSubmitted.getTime() - a.dateSubmitted.getTime()
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
 
   // Handle refresh
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    // TODO: Call API to fetch latest bids
-    // await bidAPI.getMyBids();
-    setTimeout(() => {
-      setIsRefreshing(false);
-    }, 1500);
+    await loadBids();
   };
 
   // Handle bid press
@@ -126,7 +82,7 @@ const MyBidsScreen: React.FC = () => {
   };
 
   // Handle withdraw bid
-  const handleWithdrawBid = (bidId: string) => {
+  const handleWithdrawBid = async (bidId: string) => {
     Alert.alert(
       'Withdraw Bid',
       'Are you sure you want to withdraw this bid? This action cannot be undone.',
@@ -137,17 +93,20 @@ const MyBidsScreen: React.FC = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              // TODO: Call API to withdraw bid
-              // await bidAPI.withdrawBid(bidId);
+              await bidAPI.withdrawBid(bidId);
               
-              // Update local state
-              setBids(prev => prev.map(bid => 
-                bid.id === bidId ? { ...bid, status: BidStatus.WITHDRAWN } : bid
-              ));
+              // Reload bids to get updated data
+              await loadBids();
               
               Alert.alert('Success', 'Bid withdrawn successfully');
-            } catch (error) {
-              Alert.alert('Error', 'Failed to withdraw bid');
+            } catch (error: any) {
+              console.error('Withdraw bid error:', error);
+              
+              const errorMessage = error.response?.data?.detail || 
+                                  error.response?.data?.message ||
+                                  'Failed to withdraw bid';
+              
+              Alert.alert('Error', errorMessage);
             }
           },
         },
@@ -185,18 +144,18 @@ const MyBidsScreen: React.FC = () => {
   );
 
   // Render bid card
-  const renderBid = ({ item }: { item: MockBid }) => (
+  const renderBid = ({ item }: { item: Bid }) => (
     <View style={styles.bidContainer}>
-      <Text style={styles.requestTitle}>{item.requestTitle}</Text>
-      <Text style={styles.societyName}>📍 {item.societyName}</Text>
+      <Text style={styles.requestTitle}>{item.request?.title || 'Request'}</Text>
+      <Text style={styles.societyName}>📍 {item.request?.society?.full_name || 'N/A'}</Text>
       
       <BidCard
         id={item.id}
         contractorName="You"
-        bidAmount={item.bidAmount}
-        proposalExcerpt={item.proposalExcerpt}
+        bidAmount={item.amount}
+        proposalExcerpt={item.proposal.length > 100 ? `${item.proposal.substring(0, 100)}...` : item.proposal}
         status={item.status}
-        dateSubmitted={item.dateSubmitted}
+        dateSubmitted={new Date(item.created_at)}
         onPress={() => handleBidPress(item.id)}
         onWithdraw={item.status === BidStatus.PENDING ? () => handleWithdrawBid(item.id) : undefined}
         showActions={item.status === BidStatus.PENDING}
@@ -233,10 +192,10 @@ const MyBidsScreen: React.FC = () => {
     pending: bids.filter(b => b.status === BidStatus.PENDING).length,
     accepted: bids.filter(b => b.status === BidStatus.ACCEPTED).length,
     rejected: bids.filter(b => b.status === BidStatus.REJECTED).length,
-    totalValue: bids.reduce((sum, bid) => sum + bid.bidAmount, 0),
+    totalValue: bids.reduce((sum, bid) => sum + bid.amount, 0),
     acceptedValue: bids
       .filter(b => b.status === BidStatus.ACCEPTED)
-      .reduce((sum, bid) => sum + bid.bidAmount, 0),
+      .reduce((sum, bid) => sum + bid.amount, 0),
   };
 
   if (isLoading) {
