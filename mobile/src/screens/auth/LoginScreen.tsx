@@ -16,6 +16,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthStackScreenProps } from '../../types/navigation.types';
 import { theme } from '../../theme/theme';
+import { useAuthStore } from '../../store/authStore';
+import { authAPI } from '../../api';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
@@ -23,6 +25,9 @@ import Loading from '../../components/common/Loading';
 type Props = AuthStackScreenProps<'Login'>;
 
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
+  // Auth store
+  const { setAuth } = useAuthStore();
+  
   // Form state
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
@@ -65,33 +70,31 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     try {
       setLoading(true);
       
-      // TODO: Call login API
-      // const response = await authAPI.login({
-      //   phone_number: phoneNumber.replace(/\s/g, ''),
-      //   password,
-      // });
-
-      // TODO: Check if OTP verification is required
-      // if (response.requires_verification) {
-      //   navigation.navigate('OTPVerification', {
-      //     phoneNumber: phoneNumber.replace(/\s/g, ''),
-      //   });
-      // } else {
-      //   // Save auth data and navigate to main app
-      //   await authStore.setAuth(response.user, response.access_token);
-      // }
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // For demo - navigate to OTP
-      navigation.navigate('OTPVerification', {
-        phoneNumber: phoneNumber.replace(/\s/g, ''),
+      // Call login API
+      const response = await authAPI.login({
+        phone_number: phoneNumber.replace(/\s/g, ''),
+        password,
       });
+
+      // Check if OTP verification is required
+      if (response.requires_verification) {
+        navigation.navigate('OTPVerification', {
+          phoneNumber: phoneNumber.replace(/\s/g, ''),
+        });
+      } else {
+        // Save auth data and navigate to main app
+        await setAuth(response.user, response.access_token);
+        // Navigation will be handled by RootNavigator
+      }
     } catch (error: any) {
       console.error('Login error:', error);
-      // TODO: Show error toast/alert
-      setErrors({ general: 'Invalid phone number or password' });
+      
+      // Handle specific error messages from backend
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.message ||
+                          'Login failed. Please check your credentials.';
+      
+      setErrors({ general: errorMessage });
     } finally {
       setLoading(false);
     }

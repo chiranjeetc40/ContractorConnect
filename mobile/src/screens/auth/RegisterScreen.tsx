@@ -18,6 +18,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthStackScreenProps } from '../../types/navigation.types';
 import { UserRole } from '../../types/models.types';
 import { theme } from '../../theme/theme';
+import { useAuthStore } from '../../store/authStore';
+import { authAPI } from '../../api';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
@@ -25,6 +27,9 @@ import Loading from '../../components/common/Loading';
 type Props = AuthStackScreenProps<'Register'>;
 
 const RegisterScreen: React.FC<Props> = ({ navigation }) => {
+  // Auth store
+  const { setAuth } = useAuthStore();
+  
   // Form state
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -91,26 +96,35 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
     try {
       setLoading(true);
       
-      // TODO: Call register API
-      // const response = await authAPI.register({
-      //   full_name: fullName.trim(),
-      //   phone_number: phoneNumber.replace(/\s/g, ''),
-      //   email: email.trim() || undefined,
-      //   password,
-      //   role,
-      // });
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // Navigate to OTP screen
-      navigation.navigate('OTPVerification', {
-        phoneNumber: phoneNumber.replace(/\s/g, ''),
+      // Call register API
+      const response = await authAPI.register({
+        full_name: fullName.trim(),
+        phone_number: phoneNumber.replace(/\s/g, ''),
+        email: email.trim() || undefined,
+        password,
+        role,
       });
+
+      // If registration requires OTP verification
+      if (response.requires_verification) {
+        // Navigate to OTP screen
+        navigation.navigate('OTPVerification', {
+          phoneNumber: phoneNumber.replace(/\s/g, ''),
+        });
+      } else {
+        // If no OTP required, user is ready to use the app
+        await setAuth(response.user, response.access_token);
+        // Navigation will be handled by RootNavigator
+      }
     } catch (error: any) {
       console.error('Registration error:', error);
-      // TODO: Show error toast/alert
-      setErrors({ general: 'Registration failed. Please try again.' });
+      
+      // Handle specific error messages from backend
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.message ||
+                          'Registration failed. Please try again.';
+      
+      setErrors({ general: errorMessage });
     } finally {
       setLoading(false);
     }

@@ -14,6 +14,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthStackScreenProps } from '../../types/navigation.types';
 import { theme } from '../../theme/theme';
 import { APP_CONFIG } from '../../config/app.config';
+import { useAuthStore } from '../../store/authStore';
+import { authAPI } from '../../api';
 import OTPInput from '../../components/auth/OTPInput';
 import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
@@ -22,6 +24,9 @@ type Props = AuthStackScreenProps<'OTPVerification'>;
 
 const OTPVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
   const { phoneNumber } = route.params;
+  
+  // Auth store
+  const { setAuth } = useAuthStore();
   
   // OTP state
   const [otp, setOtp] = useState('');
@@ -76,26 +81,25 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
       setLoading(true);
       setError('');
       
-      // TODO: Call verify OTP API
-      // const response = await authAPI.verifyOTP({
-      //   phone_number: phoneNumber,
-      //   otp,
-      // });
+      // Call verify OTP API
+      const response = await authAPI.verifyOTP({
+        phone_number: phoneNumber,
+        otp,
+      });
 
-      // TODO: Save auth data
-      // await authStore.setAuth(response.user, response.access_token);
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // TODO: Navigate to appropriate home screen based on role
-      // For now, just show success
-      console.log('OTP Verified!');
+      // Save auth data
+      await setAuth(response.user, response.access_token);
       
-      // The RootNavigator will automatically redirect based on auth state
+      // The RootNavigator will automatically redirect based on auth state and role
     } catch (error: any) {
       console.error('OTP verification error:', error);
-      setError('Invalid OTP. Please try again.');
+      
+      // Handle specific error messages from backend
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.message ||
+                          'Invalid OTP. Please try again.';
+      
+      setError(errorMessage);
       setOtp(''); // Clear OTP on error
     } finally {
       setLoading(false);
@@ -110,11 +114,8 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
       setLoading(true);
       setError('');
       
-      // TODO: Call resend OTP API
-      // await authAPI.resendOTP({ phone_number: phoneNumber });
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Call resend OTP API
+      await authAPI.resendOTP({ phone_number: phoneNumber });
 
       // Reset timer
       setResendTimer(APP_CONFIG.OTP_RESEND_TIME);

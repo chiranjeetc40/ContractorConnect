@@ -38,9 +38,12 @@ export const API_CONFIG = {
     // Requests
     REQUESTS: '/requests',
     MY_REQUESTS: '/requests/my-requests',
+    BROWSE_REQUESTS: '/requests/browse', // Contractor view - only OPEN requests
     ASSIGNED_REQUESTS: '/requests/assigned-to-me',
     SEARCH_REQUESTS: '/requests/search',
     REQUEST_BY_ID: (id: string) => `/requests/${id}`,
+    CANCEL_REQUEST: (id: string) => `/requests/${id}/cancel`,
+    UPLOAD_REQUEST_IMAGES: (id: string) => `/requests/${id}/images`,
     
     // Bids
     BIDS: '/bids',
@@ -48,6 +51,7 @@ export const API_CONFIG = {
     BIDS_FOR_REQUEST: (requestId: string) => `/bids/request/${requestId}`,
     BID_BY_ID: (id: string) => `/bids/${id}`,
     ACCEPT_BID: (id: string) => `/bids/${id}/accept`,
+    REJECT_BID: (id: string) => `/bids/${id}/reject`,
     WITHDRAW_BID: (id: string) => `/bids/${id}/withdraw`,
     BID_STATISTICS: (requestId: string) => `/bids/request/${requestId}/statistics`,
   },
