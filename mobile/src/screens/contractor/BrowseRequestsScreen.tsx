@@ -127,11 +127,8 @@ const BrowseRequestsScreen: React.FC<Props> = ({ navigation }) => {
   // Handle refresh
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    // TODO: Call API to fetch latest requests
-    // await requestAPI.getBrowseRequests();
-    setTimeout(() => {
-      setIsRefreshing(false);
-    }, 1500);
+    await loadRequests();
+    setIsRefreshing(false);
   };
 
   // Handle request press

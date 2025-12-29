@@ -18,6 +18,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { theme } from '../../theme/theme';
 import { SocietyStackScreenProps } from '../../types/navigation.types';
 import { APP_CONFIG } from '../../config/app.config';
+import { requestAPI } from '../../api';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
@@ -153,21 +154,18 @@ const CreateRequestScreen: React.FC<Props> = ({ navigation }) => {
     setIsLoading(true);
 
     try {
-      // TODO: Call API to create request
-      // const response = await requestAPI.createRequest({
-      //   title: formData.title.trim(),
-      //   category: formData.category,
-      //   description: formData.description.trim(),
-      //   location_address: formData.locationAddress.trim(),
-      //   location_city: formData.locationCity.trim(),
-      //   location_state: formData.locationState.trim(),
-      //   location_pincode: formData.locationPincode.trim(),
-      //   budget_min: formData.budgetMin ? Number(formData.budgetMin) : undefined,
-      //   budget_max: formData.budgetMax ? Number(formData.budgetMax) : undefined,
-      // });
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Call API to create request
+      const response = await requestAPI.createRequest({
+        title: formData.title.trim(),
+        category: formData.category,
+        description: formData.description.trim(),
+        location_address: formData.locationAddress.trim(),
+        location_city: formData.locationCity.trim(),
+        location_state: formData.locationState.trim(),
+        location_pincode: formData.locationPincode.trim(),
+        budget_min: formData.budgetMin ? Number(formData.budgetMin) : undefined,
+        budget_max: formData.budgetMax ? Number(formData.budgetMax) : undefined,
+      });
 
       Alert.alert(
         'Success',
@@ -179,12 +177,15 @@ const CreateRequestScreen: React.FC<Props> = ({ navigation }) => {
           },
         ]
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error('Create request error:', error);
-      Alert.alert(
-        'Error',
-        'Failed to create request. Please try again.'
-      );
+      
+      // Handle specific error messages from backend
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.message ||
+                          'Failed to create request. Please try again.';
+      
+      Alert.alert('Error', errorMessage);
     } finally {
       setIsLoading(false);
     }

@@ -17,67 +17,39 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../theme/theme';
 import { SocietyStackScreenProps } from '../../types/navigation.types';
-import { RequestStatus } from '../../types/models.types';
+import { Request, RequestStatus } from '../../types/models.types';
+import { requestAPI } from '../../api';
 import RequestCard from '../../components/common/RequestCard';
 import EmptyState from '../../components/common/EmptyState';
 import Loading from '../../components/common/Loading';
 
 type Props = SocietyStackScreenProps<'SocietyHomeScreen'>;
 
-interface MockRequest {
-  id: string;
-  title: string;
-  category: string;
-  status: RequestStatus;
-  location: string;
-  budgetMin?: number;
-  budgetMax?: number;
-  datePosted: Date;
-  bidCount: number;
-}
-
 const SocietyHomeScreen: React.FC<Props> = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<'all' | RequestStatus>('all');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [requests, setRequests] = useState<Request[]>([]);
 
-  // TODO: Replace with actual API data
-  const [requests, setRequests] = useState<MockRequest[]>([
-    {
-      id: '1',
-      title: 'Fix Leaking Pipe in Bathroom',
-      category: 'Plumbing',
-      status: RequestStatus.OPEN,
-      location: 'Mumbai',
-      budgetMin: 2000,
-      budgetMax: 5000,
-      datePosted: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-      bidCount: 3,
-    },
-    {
-      id: '2',
-      title: 'Electrical Wiring for New Room',
-      category: 'Electrical',
-      status: RequestStatus.IN_PROGRESS,
-      location: 'Mumbai',
-      budgetMin: 15000,
-      budgetMax: 25000,
-      datePosted: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-      bidCount: 7,
-    },
-    {
-      id: '3',
-      title: 'Painting for Living Room',
-      category: 'Painting',
-      status: RequestStatus.COMPLETED,
-      location: 'Mumbai',
-      budgetMin: 10000,
-      budgetMax: 15000,
-      datePosted: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
-      bidCount: 5,
-    },
-  ]);
+  // Load requests on mount
+  React.useEffect(() => {
+    loadRequests();
+  }, []);
+
+  // Load requests from API
+  const loadRequests = async () => {
+    try {
+      setIsLoading(true);
+      const response = await requestAPI.getMyRequests();
+      setRequests(response.requests);
+    } catch (error) {
+      console.error('Error loading requests:', error);
+      // Show error - you can use a toast/snackbar here
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Filter buttons
   const filters: { label: string; value: 'all' | RequestStatus; count: number }[] = [
@@ -98,11 +70,8 @@ const SocietyHomeScreen: React.FC<Props> = ({ navigation }) => {
   // Handle refresh
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    // TODO: Call API to fetch latest requests
-    // await requestAPI.getMyRequests();
-    setTimeout(() => {
-      setIsRefreshing(false);
-    }, 1500);
+    await loadRequests();
+    setIsRefreshing(false);
   };
 
   // Handle request press
@@ -145,17 +114,17 @@ const SocietyHomeScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   // Render request card
-  const renderRequest = ({ item }: { item: MockRequest }) => (
+  const renderRequest = ({ item }: { item: Request }) => (
     <RequestCard
       id={item.id}
       title={item.title}
       category={item.category}
       status={item.status}
-      location={item.location}
-      budgetMin={item.budgetMin}
-      budgetMax={item.budgetMax}
-      datePosted={item.datePosted}
-      bidCount={item.bidCount}
+      location={item.location_city}
+      budgetMin={item.budget_min}
+      budgetMax={item.budget_max}
+      datePosted={new Date(item.created_at)}
+      bidCount={item.bids_count || 0}
       onPress={() => handleRequestPress(item.id)}
     />
   );
