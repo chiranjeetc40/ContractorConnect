@@ -12,29 +12,33 @@ import { Request, RequestStatus } from '../types/models.types';
 export interface CreateRequestData {
   title: string;
   description: string;
-  category: string;
-  location_address: string;
-  location_city: string;
-  location_state: string;
-  location_pincode: string;
+  category: string; // Should be lowercase: 'plumbing', 'electrical', etc.
+  location?: string; // Optional detailed address
+  city: string; // Required
+  state: string; // Required
+  pincode?: string; // Optional
   budget_min?: number;
   budget_max?: number;
+  estimated_duration_days?: number;
+  required_skills?: string;
   preferred_start_date?: string;
-  images?: string[]; // Array of image URLs or base64
+  images?: string; // Comma-separated image URLs
 }
 
 export interface UpdateRequestData {
   title?: string;
   description?: string;
   category?: string;
-  location_address?: string;
-  location_city?: string;
-  location_state?: string;
-  location_pincode?: string;
+  location?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
   budget_min?: number;
   budget_max?: number;
+  estimated_duration_days?: number;
+  required_skills?: string;
   preferred_start_date?: string;
-  images?: string[];
+  images?: string;
   status?: RequestStatus;
 }
 
@@ -60,21 +64,39 @@ export interface RequestsResponse {
  * Get my requests (Society user)
  */
 export const getMyRequests = async (params?: GetRequestsParams): Promise<RequestsResponse> => {
+  console.log('📡 [API] getMyRequests called with params:', params);
+  console.log('📡 [API] Fetching from:', API_CONFIG.ENDPOINTS.MY_REQUESTS);
+  
   const response = await apiClient.get<RequestsResponse>(
     API_CONFIG.ENDPOINTS.MY_REQUESTS,
     { params }
   );
+  
+  console.log('✅ [API] getMyRequests response:', response.data);
   return response.data;
 };
 
 /**
- * Get browse requests (Contractor user - only OPEN requests)
+ * Get browse requests (Contractor user - all OPEN requests)
+ * Uses the main /requests endpoint filtered by OPEN status
  */
 export const getBrowseRequests = async (params?: GetRequestsParams): Promise<RequestsResponse> => {
+  console.log('📡 [API] getBrowseRequests called with params:', params);
+  
+  // Use main /requests endpoint with status filter for OPEN
+  const requestParams = {
+    ...params,
+    status: RequestStatus.OPEN, // Only show OPEN requests to contractors
+  };
+  
+  console.log('📡 [API] Fetching from:', API_CONFIG.ENDPOINTS.REQUESTS, 'with params:', requestParams);
+  
   const response = await apiClient.get<RequestsResponse>(
-    API_CONFIG.ENDPOINTS.BROWSE_REQUESTS,
-    { params }
+    API_CONFIG.ENDPOINTS.REQUESTS,
+    { params: requestParams }
   );
+  
+  console.log('✅ [API] getBrowseRequests response:', response.data);
   return response.data;
 };
 
@@ -92,10 +114,15 @@ export const getRequestById = async (requestId: string): Promise<Request> => {
  * Create new request (Society user)
  */
 export const createRequest = async (data: CreateRequestData): Promise<Request> => {
+  console.log('📡 [API] createRequest called with data:', data);
+  console.log('📡 [API] Posting to:', API_CONFIG.ENDPOINTS.REQUESTS);
+  
   const response = await apiClient.post<Request>(
     API_CONFIG.ENDPOINTS.REQUESTS,
     data
   );
+  
+  console.log('✅ [API] createRequest response:', response.data);
   return response.data;
 };
 

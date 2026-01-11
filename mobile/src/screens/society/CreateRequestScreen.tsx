@@ -146,26 +146,36 @@ const CreateRequestScreen: React.FC<Props> = ({ navigation }) => {
 
   // Handle form submission
   const handleSubmit = async () => {
+    console.log('📝 [CreateRequestScreen] Submit button pressed');
+    
     if (!validateForm()) {
+      console.log('⚠️ [CreateRequestScreen] Validation failed');
       Alert.alert('Validation Error', 'Please fix the errors in the form');
       return;
     }
 
+    console.log('✅ [CreateRequestScreen] Validation passed');
     setIsLoading(true);
 
     try {
-      // Call API to create request
-      const response = await requestAPI.createRequest({
+      const requestData = {
         title: formData.title.trim(),
-        category: formData.category,
+        category: formData.category.toLowerCase(), // Convert to lowercase for backend enum
         description: formData.description.trim(),
-        location_address: formData.locationAddress.trim(),
-        location_city: formData.locationCity.trim(),
-        location_state: formData.locationState.trim(),
-        location_pincode: formData.locationPincode.trim(),
+        location: formData.locationAddress.trim(), // Backend expects 'location' not 'location_address'
+        city: formData.locationCity.trim(), // Backend expects 'city'
+        state: formData.locationState.trim(), // Backend expects 'state'
+        pincode: formData.locationPincode.trim(), // Backend expects 'pincode'
         budget_min: formData.budgetMin ? Number(formData.budgetMin) : undefined,
         budget_max: formData.budgetMax ? Number(formData.budgetMax) : undefined,
-      });
+      };
+      
+      console.log('📡 [CreateRequestScreen] Sending request:', requestData);
+      
+      // Call API to create request
+      const response = await requestAPI.createRequest(requestData);
+      
+      console.log('✅ [CreateRequestScreen] Request created:', response);
 
       Alert.alert(
         'Success',
@@ -178,7 +188,9 @@ const CreateRequestScreen: React.FC<Props> = ({ navigation }) => {
         ]
       );
     } catch (error: any) {
-      console.error('Create request error:', error);
+      console.error('❌ [CreateRequestScreen] Error:', error);
+      console.error('❌ [CreateRequestScreen] Response:', error.response?.data);
+      console.error('❌ [CreateRequestScreen] Status:', error.response?.status);
       
       // Handle specific error messages from backend
       const errorMessage = error.response?.data?.detail || 

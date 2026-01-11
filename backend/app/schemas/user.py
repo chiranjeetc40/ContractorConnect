@@ -38,6 +38,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     """Schema for user registration."""
+    password: Optional[str] = Field(None, min_length=6, description="Password for future login")
     address: Optional[str] = Field(None, description="Physical address")
     city: Optional[str] = Field(None, max_length=100)
     state: Optional[str] = Field(None, max_length=100)

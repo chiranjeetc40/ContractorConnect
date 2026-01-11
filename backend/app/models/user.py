@@ -56,6 +56,7 @@ class User(Base):
     # Authentication & Contact
     phone_number = Column(String(15), unique=True, index=True, nullable=False)
     email = Column(String(255), unique=True, index=True, nullable=True)
+    password_hash = Column(String(255), nullable=True)  # Optional password for login
     
     # Role & Status
     role = Column(Enum(UserRole), nullable=False, default=UserRole.CONTRACTOR)

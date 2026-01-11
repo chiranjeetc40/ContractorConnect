@@ -9,9 +9,9 @@ from sqlalchemy.orm import Session
 from app.repositories.user_repository import UserRepository
 from app.services.otp_service import OTPService
 from app.services.user_service import UserService
-from app.core.security import create_access_token, create_refresh_token
+from app.core.security import create_access_token, create_refresh_token, verify_password
 from app.core.config import settings
-from app.schemas.user import UserCreate
+from app.schemas.user import UserCreate, UserResponse
 from app.models.user import User, UserStatus
 
 
@@ -50,6 +50,7 @@ class AuthService:
                 "message": "OTP resent for verification",
                 "phone_number": user_data.phone_number,
                 "expires_in_minutes": settings.otp_expire_minutes,
+                "requires_verification": True,
                 "user_id": existing_user.id
             }
         
@@ -67,6 +68,7 @@ class AuthService:
             "message": "User registered successfully. OTP sent for verification.",
             "phone_number": user_data.phone_number,
             "expires_in_minutes": settings.otp_expire_minutes,
+            "requires_verification": True,
             "user_id": user.id
         }
     
@@ -160,7 +162,71 @@ class AuthService:
             "refresh_token": refresh_token,
             "token_type": "bearer",
             "expires_in": settings.access_token_expire_minutes * 60,  # in seconds
-            "user": user
+            "user": UserResponse.model_validate(user).model_dump()  # Properly serialize user
+        }
+    
+    def login_with_password(self, phone_number: str, password: str) -> Dict[str, Any]:
+        """
+        Login user with phone number and password.
+        
+        Args:
+            phone_number: User's phone number
+            password: User's password
+            
+        Returns:
+            Dictionary with tokens and user info
+            
+        Raises:
+            ValueError: If credentials are invalid
+        """
+        # Get user
+        user = self.user_repo.get_by_phone(phone_number)
+        if not user:
+            raise ValueError("Invalid phone number or password")
+        
+        # Check if user has password set
+        if not user.password_hash:
+            raise ValueError("Password login not available. Please use OTP login.")
+        
+        # Verify password
+        if not verify_password(password, user.password_hash):
+            raise ValueError("Invalid phone number or password")
+        
+        # Check if user is verified
+        if not user.is_verified:
+            raise ValueError("Account not verified. Please verify your phone number first.")
+        
+        # Check if user is active
+        if not user.is_active:
+            raise ValueError("Account is deactivated. Please contact support.")
+        
+        # Update last login
+        user.last_login_at = datetime.utcnow()
+        self.db.commit()
+        
+        # Generate tokens
+        access_token = create_access_token(
+            data={
+                "user_id": user.id,
+                "phone_number": user.phone_number,
+                "role": user.role.value
+            }
+        )
+        
+        refresh_token = create_refresh_token(
+            data={
+                "user_id": user.id,
+                "phone_number": user.phone_number,
+                "role": user.role.value
+            }
+        )
+        
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+            "expires_in": settings.access_token_expire_minutes * 60,
+            "user": UserResponse.model_validate(user).model_dump()  # Properly serialize user
         }
     
     def refresh_access_token(self, user_id: int) -> Dict[str, Any]:

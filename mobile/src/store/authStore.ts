@@ -55,12 +55,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // Set both user and token (after login/register)
   setAuth: async (user, token) => {
     try {
+      console.log('💾 [AuthStore] Setting auth:', {
+        userId: user.id,
+        userName: user.full_name,
+        userRole: user.role,
+        roleType: typeof user.role,
+        userObject: user,
+        token: token.substring(0, 20) + '...',
+      });
+      
       // Save to secure storage
       await SecureStore.setItemAsync(APP_CONFIG.STORAGE_KEYS.AUTH_TOKEN, token);
       await SecureStore.setItemAsync(
         APP_CONFIG.STORAGE_KEYS.USER_DATA,
         JSON.stringify(user)
       );
+      
+      console.log('✅ [AuthStore] Auth saved successfully');
+      console.log('✅ [AuthStore] User role stored as:', user.role);
       
       // Update state
       set({
@@ -69,7 +81,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isAuthenticated: true,
       });
     } catch (error) {
-      console.error('Error saving auth data:', error);
+      console.error('❌ [AuthStore] Error saving auth data:', error);
       throw error;
     }
   },
@@ -95,6 +107,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // Initialize auth state from storage (on app start)
   initialize: async () => {
     try {
+      console.log('🔄 [AuthStore] Initializing auth...');
       set({ isInitializing: true });
       
       // Load from secure storage
@@ -103,18 +116,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       if (token && userJson) {
         const user = JSON.parse(userJson) as User;
+        console.log('✅ [AuthStore] Restored user:', {
+          userId: user.id,
+          userName: user.full_name,
+          userRole: user.role,
+          roleType: typeof user.role,
+        });
         set({
           user,
           token,
           isAuthenticated: true,
         });
+      } else {
+        console.log('⚠️ [AuthStore] No stored auth found');
       }
     } catch (error) {
-      console.error('Error initializing auth:', error);
+      console.error('❌ [AuthStore] Error initializing auth:', error);
       // Clear potentially corrupted data
       await get().clearAuth();
     } finally {
       set({ isInitializing: false });
+      console.log('✅ [AuthStore] Initialization complete');
     }
   },
   

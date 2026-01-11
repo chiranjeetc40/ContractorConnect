@@ -4,17 +4,20 @@
  */
 
 // Change this to your backend URL
-// For local development: http://10.0.2.2:8000 (Android emulator) or http://localhost:8000 (iOS simulator/web)
+// For local development with Expo Go on physical device: http://YOUR_COMPUTER_IP:8000
+// For Android emulator: http://10.0.2.2:8000
+// For iOS simulator: http://localhost:8000
 // For production: https://your-backend-url.com
 export const API_CONFIG = {
   // Base URL for API requests
+  // Using 192.168.1.107 - your computer's IP on local network
   BASE_URL: __DEV__ 
-    ? 'http://10.0.2.2:8000/api/v1'  // Android emulator
+    ? 'http://192.168.1.103:8000/api/v1'  // Your computer's local IP for Expo Go
     : 'https://your-production-api.com/api/v1',
   
-  // Alternative base URLs for different platforms
-  IOS_BASE_URL: 'http://localhost:8000/api/v1',
-  WEB_BASE_URL: 'http://localhost:8000/api/v1',
+  // Alternative base URLs for different platforms (not used in current setup)
+  IOS_BASE_URL: 'http://192.168.1.107:8000/api/v1',
+  WEB_BASE_URL: 'http://192.168.1.107:8000/api/v1',
   
   // Request timeout (in milliseconds)
   TIMEOUT: 30000,
@@ -66,3 +69,7 @@ export const getBaseURL = (): string => {
   }
   return API_CONFIG.BASE_URL;
 };
+
+// Log the API configuration on app start
+console.log('🔧 [API Config] Base URL:', API_CONFIG.BASE_URL);
+console.log('🔧 [API Config] Timeout:', API_CONFIG.TIMEOUT, 'ms');

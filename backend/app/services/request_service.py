@@ -43,10 +43,14 @@ class RequestService:
         """
         # Verify user is a society
         society = self.user_repo.get_by_id(society_id)
+        print(f"🔐 DEBUG create_request - Role: {society.role if society else None} (type: {type(society.role).__name__ if society else None})")
+        print(f"🔐 DEBUG create_request - UserRole.SOCIETY: {UserRole.SOCIETY} (type: {type(UserRole.SOCIETY).__name__})")
+        print(f"🔐 DEBUG create_request - Comparison: {society.role if society else None} != {UserRole.SOCIETY} = {society.role != UserRole.SOCIETY if society else None}")
+        
         if not society or society.role != UserRole.SOCIETY:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only societies can post requests"
+                detail=f"Only societies can post requests. User role: {society.role if society else 'None'}"
             )
         
         # Prepare request data
@@ -161,6 +165,12 @@ class RequestService:
         Returns:
             RequestListResponse with user's requests
         """
+        user = self.user_repo.get_by_id(user_id)
+        print(f"🔐 DEBUG get_my_requests - User ID: {user_id}")
+        print(f"🔐 DEBUG get_my_requests - User found: {user is not None}")
+        if user:
+            print(f"🔐 DEBUG get_my_requests - User role: {user.role} (type: {type(user.role).__name__})")
+        
         requests, total = self.request_repo.get_by_society(user_id, skip, limit)
         
         return RequestListResponse(

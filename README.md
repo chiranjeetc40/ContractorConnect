@@ -1,72 +1,153 @@
 # ContractorConnect
 
-A comprehensive mobile application connecting building societies with civil work contractors.
+A mobile application connecting building societies with trusted contractors for civil work projects.
 
-## Project Structure
+## 📱 What It Does
+
+**For Societies:** Submit work requests, receive bids, hire contractors  
+**For Contractors:** Browse available work, submit competitive bids, get hired
+
+
+### Backend
+```powershell
+cd backend
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Mobile
+```powershell
+cd mobile
+npx expo start
+```
+
+## 📂 Project Structure
 
 ```
 ContractorConnect/
-├── backend/              # Python FastAPI backend
-├── mobile/               # React Native mobile app
-├── docs/                 # Project documentation
-├── scripts/              # Utility scripts
-└── README.md            # This file
+├── backend/              # FastAPI backend with PostgreSQL
+├── mobile/               # React Native Expo app
+├── docs/                 # Detailed documentation
+│   ├── fixes/            # Bug fix documentation
+│   └── sessions/         # Development session notes
+├── QUICK_START.md        # ⭐ Start here!
+├── COMMANDS.md           # Useful commands reference
+├── DEPLOYMENT_GUIDE.md   # Production deployment
+└── README.md             # This file
 ```
 
-## Quick Start
+## 📚 Documentation
 
-### Prerequisites
-- Python 3.9+
-- Node.js 16+
-- PostgreSQL 13+
-- Redis 6+
-- Android Studio (for mobile development)
+### Essential Docs (Root Directory):
+- **[QUICK_START.md](./QUICK_START.md)** - Get started in 5 minutes
+- **[COMMANDS.md](./COMMANDS.md)** - All useful commands
+- **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)** - Deploy to production
+- **[DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md)** - Database management
 
-### Backend Setup
-```bash
+### Detailed Docs (docs/ folder):
+- **[docs/PROJECT-CHECKLIST.md](./docs/PROJECT-CHECKLIST.md)** - Implementation progress
+- **[docs/API-SPECIFICATION.md](./docs/07-API-SPECIFICATION.md)** - API reference
+- **[docs/fixes/](./docs/fixes/)** - Bug fixes and solutions
+- **[docs/sessions/](./docs/sessions/)** - Development session notes
+
+## ✨ Features
+
+### Authentication
+- ✅ Phone number + OTP verification
+- ✅ Password login for returning users
+- ✅ Secure token storage
+- ✅ Role-based access (Society/Contractor)
+
+### Society Users
+- ✅ Create work requests
+- ✅ View all your requests
+- ✅ Track request status
+- ✅ Receive and review bids
+
+### Contractor Users
+- ✅ Browse available work
+- ✅ Filter by category
+- ✅ Submit competitive bids
+- ✅ Track bid status
+
+### Common Features
+- ✅ Profile management
+- ✅ Logout functionality
+- ✅ Safe area navigation
+- ✅ Responsive design
+
+## 🛠️ Tech Stack
+
+**Backend:**
+- FastAPI (Python)
+- PostgreSQL (Database)
+- SQLAlchemy (ORM)
+- Alembic (Migrations)
+- JWT Authentication
+- Bcrypt (Password hashing)
+
+**Mobile:**
+- React Native + Expo
+- TypeScript
+- Zustand (State management)
+- React Navigation
+- Expo SecureStore
+- React Native Paper (UI)
+
+**Hosting:**
+- Backend: Render
+- Database: Render PostgreSQL
+- Mobile: Expo Go (Development)
+
+## 📊 Current Status
+
+**Phase:** MVP Development  
+**Status:** Core features complete, ready for testing
+
+### Completed ✅
+- User authentication system
+- Request creation and browsing
+- Bid submission system
+- Profile management
+- Mobile UI with navigation
+
+### In Progress 🚧
+- Request details screen
+- Bid management
+- Notifications
+
+### Planned 📋
+- Chat/Messaging
+- Payment integration
+- Review system
+
+## 🔑 Environment Setup
+
+### Backend (.env)
+```env
+DATABASE_URL=postgresql://...
+SECRET_KEY=your-secret-key
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+REFRESH_TOKEN_EXPIRE_DAYS=30
+```
+
+### Mobile (.env)
+```env
+API_URL=http://192.168.1.107:8000/api/v1
+```
+
+## 🧪 Testing
+
+### Check Database
+```powershell
 cd backend
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-cp .env.example .env
-# Configure .env with your settings
-alembic upgrade head
-uvicorn app.main:app --reload
+.\.venv\Scripts\python.exe scripts\check_users.py
 ```
 
-### Mobile App Setup
-```bash
-cd mobile
-npm install
-cp .env.example .env
-# Configure .env with your settings
-npm run android
-```
+## 📞 Support
 
-## Documentation
-
-Complete documentation is available in the [docs/](./docs) folder:
-- [Executive Summary](./docs/EXECUTIVE-SUMMARY.md)
-- [Quick Start Guide](./docs/00-QUICK-START.md)
-- [API Documentation](./docs/07-API-SPECIFICATION.md)
-- [Implementation Progress](./docs/PROJECT-CHECKLIST.md)
-
-## Development Status
-
-**Current Phase**: Phase 1 - Week 1 (Project Setup)  
-**Progress**: Setting up backend and mobile infrastructure
-
-See [PROJECT-CHECKLIST.md](./docs/PROJECT-CHECKLIST.md) for detailed progress.
-
-## Tech Stack
-
-**Backend**: Python FastAPI, PostgreSQL, Redis, SQLAlchemy  
-**Mobile**: React Native, TypeScript, Redux Toolkit, WatermelonDB  
-**DevOps**: GitHub Actions, Docker
-
-## License
-
-Proprietary - All rights reserved
+Check documentation in `docs/` folder or review session notes for troubleshooting.
 
 ---
-*Last Updated: December 28, 2025*
+
+**Last Updated:** January 6, 2026  
+**Version:** 1.0.0 MVP

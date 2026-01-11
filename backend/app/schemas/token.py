@@ -2,7 +2,7 @@
 Token-related Pydantic schemas for JWT authentication.
 """
 
-from typing import Optional
+from typing import Optional, Any
 from pydantic import BaseModel, Field
 
 
@@ -12,6 +12,7 @@ class Token(BaseModel):
     refresh_token: str = Field(..., description="JWT refresh token")
     token_type: str = Field(default="bearer", description="Token type")
     expires_in: int = Field(..., description="Token expiry time in seconds")
+    user: Optional[Any] = Field(None, description="User object")  # Added user field
     
     class Config:
         json_schema_extra = {
@@ -22,6 +23,8 @@ class Token(BaseModel):
                 "expires_in": 1800
             }
         }
+        # Allow arbitrary types for user object
+        arbitrary_types_allowed = True
 
 
 class TokenData(BaseModel):

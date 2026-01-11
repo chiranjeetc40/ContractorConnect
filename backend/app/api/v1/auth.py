@@ -130,6 +130,50 @@ async def login(
 
 
 @router.post(
+    "/login-password",
+    response_model=Token,
+    summary="Login with Password",
+    description="""
+    Login using phone number and password (alternative to OTP).
+    
+    **Process:**
+    1. User provides phone number and password
+    2. System validates credentials
+    3. JWT tokens are generated and returned
+    
+    **Note:** User must have set a password during registration
+    
+    **Returns:**
+    - access_token: Short-lived token (30 minutes)
+    - refresh_token: Long-lived token (30 days)  
+    - token_type: "bearer"
+    - expires_in: Access token expiry in seconds
+    - user: User profile data
+    """,
+    responses={
+        200: {"description": "Login successful, tokens returned"},
+        400: {"description": "Invalid credentials or account issues"},
+        422: {"description": "Validation error"}
+    }
+)
+async def login_with_password(
+    phone_number: str,
+    password: str,
+    db: Session = Depends(get_db)
+):
+    """Login with phone number and password."""
+    try:
+        auth_service = AuthService(db)
+        result = auth_service.login_with_password(phone_number, password)
+        return result
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+
+@router.post(
     "/verify-otp",
     response_model=Token,
     summary="Verify OTP and Login",
@@ -196,13 +240,8 @@ async def verify_otp(
                 purpose="registration"
             )
         
-        # Don't return user object, only tokens
-        return {
-            "access_token": result["access_token"],
-            "refresh_token": result["refresh_token"],
-            "token_type": result["token_type"],
-            "expires_in": result["expires_in"]
-        }
+        # Return complete result including user object
+        return result
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.repositories.user_repository import UserRepository
 from app.models.user import User, UserRole
 from app.schemas.user import UserCreate, UserUpdate
+from app.core.security import hash_password
 
 
 class UserService:
@@ -59,8 +60,14 @@ class UserService:
         if user_data.email and self.user_repo.exists_by_email(user_data.email):
             raise ValueError("User with this email already exists")
         
+        # Create user dictionary
+        user_dict = user_data.model_dump(exclude_unset=True, exclude={'password'})
+        
+        # Hash password if provided
+        if user_data.password:
+            user_dict['password_hash'] = hash_password(user_data.password)
+        
         # Create user
-        user_dict = user_data.model_dump(exclude_unset=True)
         user = self.user_repo.create(user_dict)
         
         return user

@@ -17,6 +17,12 @@ from app.core.database import get_db
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
@@ -184,5 +190,9 @@ async def get_current_user(
     user = db.query(User).filter(User.id == user_id).first()
     if user is None:
         raise credentials_exception
+    
+    print(f"🔐 DEBUG get_current_user - User ID: {user.id}")
+    print(f"🔐 DEBUG get_current_user - User role: {user.role} (type: {type(user.role).__name__})")
+    print(f"🔐 DEBUG get_current_user - JWT role: {payload.get('role')}")
     
     return user

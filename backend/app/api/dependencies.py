@@ -45,24 +45,38 @@ def get_current_user(
         token = credentials.credentials
         payload = decode_token(token)
         
+        print(f"🔐 DEBUG get_current_user - Token decoded successfully")
+        print(f"🔐 DEBUG get_current_user - Payload: {payload}")
+        
         if payload is None:
+            print(f"🔐 DEBUG get_current_user - Payload is None!")
             raise credentials_exception
         
         user_id: int = payload.get("user_id")
+        print(f"🔐 DEBUG get_current_user - user_id from token: {user_id}")
+        
         if user_id is None:
+            print(f"🔐 DEBUG get_current_user - user_id is None!")
             raise credentials_exception
             
     except JWTError:
+        print(f"🔐 DEBUG get_current_user - JWTError occurred!")
         raise credentials_exception
     
     # Get user from database
     user_repo = UserRepository(db)
     user = user_repo.get_by_id(user_id)
     
+    print(f"🔐 DEBUG get_current_user - User found: {user is not None}")
+    if user:
+        print(f"🔐 DEBUG get_current_user - Role: {user.role} (type: {type(user.role).__name__})")
+    
     if user is None:
+        print(f"🔐 DEBUG get_current_user - User not found in database!")
         raise credentials_exception
     
     if not user.is_active:
+        print(f"🔐 DEBUG get_current_user - User is not active!")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is deactivated"

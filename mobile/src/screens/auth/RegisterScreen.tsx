@@ -69,19 +69,8 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
       newErrors.email = 'Please enter a valid email address';
     }
 
-    // Password validation
-    if (!password) {
-      newErrors.password = 'Password is required';
-    } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-
-    // Confirm password validation
-    if (!confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
-    } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
+    // Note: Password is optional for OTP-based authentication
+    // Password validation removed - using OTP for authentication
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -98,23 +87,24 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
       
       // Call register API
       const response = await authAPI.register({
-        full_name: fullName.trim(),
+        name: fullName.trim(),
         phone_number: phoneNumber.replace(/\s/g, ''),
         email: email.trim() || undefined,
-        password,
+        password: password.trim() || undefined,  // Include password if provided
         role,
       });
 
-      // If registration requires OTP verification
+      // Registration successful - always requires OTP verification
       if (response.requires_verification) {
         // Navigate to OTP screen
         navigation.navigate('OTPVerification', {
           phoneNumber: phoneNumber.replace(/\s/g, ''),
         });
       } else {
-        // If no OTP required, user is ready to use the app
-        await setAuth(response.user, response.access_token);
-        // Navigation will be handled by RootNavigator
+        // Fallback - if somehow no verification required
+        if (response.access_token && response.user) {
+          await setAuth(response.user, response.access_token);
+        }
       }
     } catch (error: any) {
       console.error('Registration error:', error);
@@ -206,7 +196,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
               helperText="Optional"
             />
 
-            {/* Password */}
+            {/* Password - For future login */}
             <Input
               label="Password"
               value={password}
@@ -217,13 +207,13 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                 }
               }}
               error={errors.password}
-              required
               leftIcon="lock"
               rightIcon={showPassword ? 'eye-off' : 'eye'}
               onRightIconPress={() => setShowPassword(!showPassword)}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
               autoComplete="password"
+              helperText="Optional - Set password for quick login later"
             />
 
             {/* Confirm Password */}
@@ -237,12 +227,12 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                 }
               }}
               error={errors.confirmPassword}
-              required
               leftIcon="lock-check"
               rightIcon={showConfirmPassword ? 'eye-off' : 'eye'}
               onRightIconPress={() => setShowConfirmPassword(!showConfirmPassword)}
               secureTextEntry={!showConfirmPassword}
               autoCapitalize="none"
+              helperText="Optional - Must match password above"
             />
 
             {/* Role Selection */}
@@ -253,6 +243,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                 onValueChange={(value) => setRole(value as UserRole)}
                 value={role}
               >
+              
                 <TouchableOpacity
                   style={[
                     styles.roleOption,

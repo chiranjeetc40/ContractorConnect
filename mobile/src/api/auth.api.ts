@@ -11,10 +11,16 @@ import { User, AuthResponse, UserRole } from '../types/models.types';
 
 export interface RegisterRequest {
   phone_number: string;
-  password: string;
-  full_name: string;
+  name: string;
   email?: string;
   role: UserRole;
+  password?: string;  // Optional password for future login
+  // Optional fields
+  address?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  description?: string;
 }
 
 export interface LoginRequest {
@@ -24,7 +30,7 @@ export interface LoginRequest {
 
 export interface VerifyOTPRequest {
   phone_number: string;
-  otp: string;
+  otp_code: string;  // Backend expects 'otp_code', not 'otp'
 }
 
 export interface ResendOTPRequest {
@@ -45,11 +51,22 @@ export const register = async (data: RegisterRequest): Promise<AuthResponse> => 
 };
 
 /**
- * Login with phone and password
+ * Request OTP for login (OTP-based login)
  */
-export const login = async (data: LoginRequest): Promise<AuthResponse> => {
+export const requestLoginOTP = async (phone_number: string): Promise<AuthResponse> => {
   const response = await apiClient.post<AuthResponse>(
     API_CONFIG.ENDPOINTS.LOGIN,
+    { phone_number }
+  );
+  return response.data;
+};
+
+/**
+ * Login with phone and password (password-based login)
+ */
+export const loginWithPassword = async (data: LoginRequest): Promise<AuthResponse> => {
+  const response = await apiClient.post<AuthResponse>(
+    '/auth/login-password',
     data
   );
   return response.data;
@@ -91,7 +108,8 @@ export const logout = async (): Promise<void> => {
 
 export const authAPI = {
   register,
-  login,
+  requestLoginOTP,
+  loginWithPassword,
   verifyOTP,
   resendOTP,
   logout,

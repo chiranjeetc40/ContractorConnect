@@ -28,8 +28,24 @@ const RootNavigator: React.FC = () => {
     initialize();
   }, []);
   
+  // Debug logging
+  useEffect(() => {
+    if (user) {
+      console.log('🔍 [RootNavigator] User detected:', {
+        id: user.id,
+        name: user.full_name,
+        role: user.role,
+        roleType: typeof user.role,
+        isAuthenticated,
+      });
+    } else {
+      console.log('🔍 [RootNavigator] No user, isAuthenticated:', isAuthenticated);
+    }
+  }, [user, isAuthenticated]);
+  
   // Show loading screen while initializing
   if (isInitializing) {
+    console.log('⏳ [RootNavigator] Initializing auth...');
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2196F3" />
@@ -46,22 +62,40 @@ const RootNavigator: React.FC = () => {
       >
         {!isAuthenticated ? (
           // Auth Stack - for non-authenticated users
-          <Stack.Screen 
-            name="Auth" 
-            component={AuthNavigator}
-          />
-        ) : user?.role === 'Society' ? (
+          <>
+            {console.log('🔓 [RootNavigator] Showing Auth Navigator')}
+            <Stack.Screen 
+              name="Auth" 
+              component={AuthNavigator}
+            />
+          </>
+        ) : user?.role === 'society' ? (
           // Society Stack - for society users
-          <Stack.Screen 
-            name="Society" 
-            component={SocietyNavigator}
-          />
-        ) : (
+          <>
+            {console.log('🏢 [RootNavigator] Showing Society Navigator')}
+            <Stack.Screen 
+              name="Society" 
+              component={SocietyNavigator}
+            />
+          </>
+        ) : user?.role === 'contractor' ? (
           // Contractor Stack - for contractor users
-          <Stack.Screen 
-            name="Contractor" 
-            component={ContractorNavigator}
-          />
+          <>
+            {console.log('👷 [RootNavigator] Showing Contractor Navigator')}
+            <Stack.Screen 
+              name="Contractor" 
+              component={ContractorNavigator}
+            />
+          </>
+        ) : (
+          // Fallback - shouldn't happen
+          <>
+            {console.log('⚠️ [RootNavigator] Unknown role, defaulting to Contractor')}
+            <Stack.Screen 
+              name="Contractor" 
+              component={ContractorNavigator}
+            />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>

@@ -35,6 +35,7 @@ export const APP_CONFIG = {
   
   // Categories
   REQUEST_CATEGORIES: [
+    'Structural Fix',
     'Plumbing',
     'Electrical',
     'Carpentry',

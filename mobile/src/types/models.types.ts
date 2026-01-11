@@ -6,9 +6,9 @@
 // ============ User Types ============
 
 export enum UserRole {
-  SOCIETY = 'Society',
-  CONTRACTOR = 'Contractor',
-  ADMIN = 'Admin',
+  SOCIETY = 'society',
+  CONTRACTOR = 'contractor',
+  ADMIN = 'admin',
 }
 
 export interface User {
@@ -25,11 +25,11 @@ export interface User {
 // ============ Request Types ============
 
 export enum RequestStatus {
-  OPEN = 'OPEN',
-  IN_PROGRESS = 'IN_PROGRESS',
-  COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED',
-  ON_HOLD = 'ON_HOLD',
+  OPEN = 'open',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
+  ON_HOLD = 'on_hold',
 }
 
 export interface Request {
@@ -39,10 +39,10 @@ export interface Request {
   title: string;
   description: string;
   category: string;
-  location_address: string;
-  location_city: string;
-  location_state: string;
-  location_pincode: string;
+  location?: string; // Optional detailed address
+  city: string;
+  state: string;
+  pincode?: string;
   budget_min?: number;
   budget_max?: number;
   status: RequestStatus;
@@ -57,10 +57,10 @@ export interface Request {
 // ============ Bid Types ============
 
 export enum BidStatus {
-  PENDING = 'PENDING',
-  ACCEPTED = 'ACCEPTED',
-  REJECTED = 'REJECTED',
-  WITHDRAWN = 'WITHDRAWN',
+  PENDING = 'pending',
+  ACCEPTED = 'accepted',
+  REJECTED = 'rejected',
+  WITHDRAWN = 'withdrawn',
 }
 
 export interface Bid {

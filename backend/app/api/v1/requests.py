@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.security import get_current_user
+from app.api.dependencies import get_current_user
 from app.models.user import User
 from app.models.request import RequestStatus, RequestCategory
 from app.repositories.request_repository import RequestRepository
@@ -23,7 +23,7 @@ from app.schemas.request import (
 )
 
 
-router = APIRouter(prefix="/requests", tags=["Requests"])
+router = APIRouter(tags=["Requests"])  # Remove prefix here, it's added in __init__.py
 
 
 def get_request_service(db: Session = Depends(get_db)) -> RequestService:
@@ -179,6 +179,7 @@ async def get_my_requests(
     service: RequestService = Depends(get_request_service)
 ) -> RequestListResponse:
     """Get requests posted by current user."""
+    print(f"🔐 DEBUG endpoint get_my_requests - Role: {current_user.role}")
     return service.get_my_requests(current_user.id, skip, limit)
 
 

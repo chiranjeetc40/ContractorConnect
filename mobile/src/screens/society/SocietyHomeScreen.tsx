@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { FAB, Searchbar, Chip } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../../theme/theme';
 import { SocietyStackScreenProps } from '../../types/navigation.types';
 import { Request, RequestStatus } from '../../types/models.types';
@@ -26,6 +26,7 @@ import Loading from '../../components/common/Loading';
 type Props = SocietyStackScreenProps<'SocietyHomeScreen'>;
 
 const SocietyHomeScreen: React.FC<Props> = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<'all' | RequestStatus>('all');
   const [isLoading, setIsLoading] = useState(true);
@@ -34,18 +35,29 @@ const SocietyHomeScreen: React.FC<Props> = ({ navigation }) => {
 
   // Load requests on mount
   React.useEffect(() => {
+    console.log('🏢 [SocietyHomeScreen] Component mounted');
     loadRequests();
   }, []);
 
   // Load requests from API
   const loadRequests = async () => {
     try {
+      console.log('📡 [SocietyHomeScreen] Loading requests...');
       setIsLoading(true);
       const response = await requestAPI.getMyRequests();
-      setRequests(response.requests);
-    } catch (error) {
-      console.error('Error loading requests:', error);
-      // Show error - you can use a toast/snackbar here
+      console.log('✅ [SocietyHomeScreen] Requests loaded:', response.requests.length);
+      setRequests(response.requests || []); // Handle empty array
+    } catch (error: any) {
+      console.error('❌ [SocietyHomeScreen] Error loading requests:', error);
+      
+      // Handle 404 or empty response gracefully
+      if (error?.response?.status === 404 || !error?.response) {
+        console.log('ℹ️ [SocietyHomeScreen] No requests found (empty state)');
+        setRequests([]); // Set to empty array, don't show error
+      } else {
+        // Show error for other issues
+        console.error('❌ [SocietyHomeScreen] API Error:', error?.response?.data || error.message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -81,6 +93,7 @@ const SocietyHomeScreen: React.FC<Props> = ({ navigation }) => {
 
   // Handle create new request
   const handleCreateRequest = () => {
+    console.log('➕ [SocietyHomeScreen] Create request button pressed');
     navigation.navigate('CreateRequest');
   };
 
@@ -120,7 +133,7 @@ const SocietyHomeScreen: React.FC<Props> = ({ navigation }) => {
       title={item.title}
       category={item.category}
       status={item.status}
-      location={item.location_city}
+      location={item.city} // Use city field
       budgetMin={item.budget_min}
       budgetMax={item.budget_max}
       datePosted={new Date(item.created_at)}
@@ -163,11 +176,14 @@ const SocietyHomeScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   if (isLoading) {
+    console.log('⏳ [SocietyHomeScreen] Showing loading state');
     return <Loading message="Loading requests..." />;
   }
 
+  console.log('🎨 [SocietyHomeScreen] Rendering home screen with', filteredRequests.length, 'requests');
+
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Search Bar */}
       <View style={styles.searchContainer}>
         <Searchbar
@@ -190,6 +206,7 @@ const SocietyHomeScreen: React.FC<Props> = ({ navigation }) => {
         contentContainerStyle={[
           styles.listContent,
           filteredRequests.length === 0 && styles.emptyListContent,
+          { paddingBottom: 120 } // Extra padding to account for FAB button
         ]}
         ListEmptyComponent={renderEmptyState}
         refreshControl={
@@ -203,9 +220,17 @@ const SocietyHomeScreen: React.FC<Props> = ({ navigation }) => {
       />
 
       {/* Floating Action Button */}
+      {console.log('🔘 [SocietyHomeScreen] Rendering FAB button')}
       <FAB
         icon="plus"
-        style={styles.fab}
+        style={[
+          styles.fab, 
+          { 
+            bottom: insets.bottom > 0 
+              ? insets.bottom + 70  // Add space for tab bar + padding
+              : 80  // Default bottom position when no insets
+          }
+        ]}
         onPress={handleCreateRequest}
         label="New Request"
         color={theme.colors.background.default}

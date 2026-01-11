@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.security import get_current_user
+from app.api.dependencies import get_current_user
 from app.models.user import User
 from app.models.bid import BidStatus
 from app.repositories.bid_repository import BidRepository
@@ -23,7 +23,7 @@ from app.schemas.bid import (
 )
 
 
-router = APIRouter(prefix="/bids", tags=["Bids"])
+router = APIRouter(tags=["Bids"])  # Remove prefix here, it's added in __init__.py
 
 
 def get_bid_service(db: Session = Depends(get_db)) -> BidService:

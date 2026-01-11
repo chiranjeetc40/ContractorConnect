@@ -10,16 +10,14 @@ import { Bid, BidStatus } from '../types/models.types';
 // ============ Request Types ============
 
 export interface SubmitBidData {
-  request_id: string;
-  bid_amount: number;
-  proposal: string;
-  estimated_completion_days?: number;
+  request_id: number; // Changed from string to number to match backend
+  amount: number; // Changed from bid_amount to amount
+  proposal: string; // Must be 50-2000 characters
 }
 
 export interface UpdateBidData {
-  bid_amount?: number;
+  amount?: number; // Changed from bid_amount
   proposal?: string;
-  estimated_completion_days?: number;
   status?: BidStatus;
 }
 

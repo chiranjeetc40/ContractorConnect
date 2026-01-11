@@ -84,7 +84,7 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
       // Call verify OTP API
       const response = await authAPI.verifyOTP({
         phone_number: phoneNumber,
-        otp,
+        otp_code: otp,  // Changed from 'otp' to 'otp_code' to match backend
       });
 
       // Save auth data

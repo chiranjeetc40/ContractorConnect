@@ -32,6 +32,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loginMethod, setLoginMethod] = useState<'password' | 'otp'>('password');  // Toggle between methods
   
   // Validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -50,11 +51,13 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       newErrors.phoneNumber = 'Please enter a valid 10-digit phone number';
     }
 
-    // Password validation
-    if (!password) {
-      newErrors.password = 'Password is required';
-    } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+    // Password validation (only for password login)
+    if (loginMethod === 'password') {
+      if (!password) {
+        newErrors.password = 'Password is required';
+      } else if (password.length < 6) {
+        newErrors.password = 'Password must be at least 6 characters';
+      }
     }
 
     setErrors(newErrors);
@@ -70,21 +73,24 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     try {
       setLoading(true);
       
-      // Call login API
-      const response = await authAPI.login({
-        phone_number: phoneNumber.replace(/\s/g, ''),
-        password,
-      });
-
-      // Check if OTP verification is required
-      if (response.requires_verification) {
-        navigation.navigate('OTPVerification', {
-          phoneNumber: phoneNumber.replace(/\s/g, ''),
+      if (loginMethod === 'password') {
+        // Password-based login
+        const response = await authAPI.loginWithPassword({
+          phone_number: phoneNumber.replace(/\s/g, ''),
+          password,
         });
-      } else {
+
         // Save auth data and navigate to main app
         await setAuth(response.user, response.access_token);
         // Navigation will be handled by RootNavigator
+      } else {
+        // OTP-based login
+        const response = await authAPI.requestLoginOTP(phoneNumber.replace(/\s/g, ''));
+
+        // Navigate to OTP verification
+        navigation.navigate('OTPVerification', {
+          phoneNumber: phoneNumber.replace(/\s/g, ''),
+        });
       }
     } catch (error: any) {
       console.error('Login error:', error);
@@ -123,6 +129,41 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* Form */}
           <View style={styles.form}>
+            {/* Login Method Toggle */}
+            <View style={styles.toggleContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.toggleButton,
+                  loginMethod === 'password' && styles.toggleButtonActive
+                ]}
+                onPress={() => setLoginMethod('password')}
+                disabled={loading}
+              >
+                <Text style={[
+                  styles.toggleButtonText,
+                  loginMethod === 'password' && styles.toggleButtonTextActive
+                ]}>
+                  🔑 Password Login
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.toggleButton,
+                  loginMethod === 'otp' && styles.toggleButtonActive
+                ]}
+                onPress={() => setLoginMethod('otp')}
+                disabled={loading}
+              >
+                <Text style={[
+                  styles.toggleButtonText,
+                  loginMethod === 'otp' && styles.toggleButtonTextActive
+                ]}>
+                  📱 OTP Login
+                </Text>
+              </TouchableOpacity>
+            </View>
+
             {/* Phone Number */}
             <Input
               label="Phone Number"
@@ -144,37 +185,48 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
               autoFocus
             />
 
-            {/* Password */}
-            <Input
-              label="Password"
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                if (errors.password) {
-                  setErrors({ ...errors, password: '' });
-                }
-              }}
-              error={errors.password}
-              required
-              leftIcon="lock"
-              rightIcon={showPassword ? 'eye-off' : 'eye'}
-              onRightIconPress={() => setShowPassword(!showPassword)}
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-              autoComplete="password"
-            />
+            {/* Password (only for password login) */}
+            {loginMethod === 'password' && (
+              <Input
+                label="Password"
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  if (errors.password) {
+                    setErrors({ ...errors, password: '' });
+                  }
+                }}
+                error={errors.password}
+                required
+                leftIcon="lock"
+                rightIcon={showPassword ? 'eye-off' : 'eye'}
+                onRightIconPress={() => setShowPassword(!showPassword)}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                autoComplete="password"
+              />
+            )}
 
-            {/* Forgot Password Link */}
-            <TouchableOpacity
-              style={styles.forgotPasswordContainer}
-              onPress={() => {
-                // TODO: Implement forgot password
-                console.log('Forgot password');
-              }}
-              disabled={loading}
-            >
-              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-            </TouchableOpacity>
+            {/* OTP Info (only for OTP login) */}
+            {loginMethod === 'otp' && (
+              <Text style={styles.otpInfoText}>
+                📱 An OTP will be sent to your phone number for verification
+              </Text>
+            )}
+
+            {/* Forgot Password Link (only for password login) */}
+            {loginMethod === 'password' && (
+              <TouchableOpacity
+                style={styles.forgotPasswordContainer}
+                onPress={() => {
+                  // Switch to OTP login
+                  setLoginMethod('otp');
+                }}
+                disabled={loading}
+              >
+                <Text style={styles.forgotPasswordText}>Forgot Password? Use OTP</Text>
+              </TouchableOpacity>
+            )}
 
             {/* General Error */}
             {errors.general && (
@@ -264,6 +316,40 @@ const styles = StyleSheet.create({
   },
   form: {
     marginBottom: theme.spacing.xl,
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    marginBottom: theme.spacing.lg,
+    gap: theme.spacing.sm,
+  },
+  toggleButton: {
+    flex: 1,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 2,
+    borderColor: theme.colors.border.light,
+    backgroundColor: theme.colors.white,
+    alignItems: 'center',
+  },
+  toggleButtonActive: {
+    borderColor: theme.colors.primary.main,
+    backgroundColor: theme.colors.primary.main + '10',
+  },
+  toggleButtonText: {
+    fontSize: theme.typography.body2.fontSize,
+    color: theme.colors.text.secondary,
+    fontWeight: '600',
+  },
+  toggleButtonTextActive: {
+    color: theme.colors.primary.main,
+  },
+  otpInfoText: {
+    fontSize: theme.typography.body2.fontSize,
+    color: theme.colors.text.secondary,
+    textAlign: 'center',
+    marginVertical: theme.spacing.md,
+    fontStyle: 'italic',
   },
   forgotPasswordContainer: {
     alignSelf: 'flex-end',

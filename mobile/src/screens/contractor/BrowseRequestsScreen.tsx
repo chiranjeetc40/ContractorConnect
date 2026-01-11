@@ -3,7 +3,7 @@
  * Contractors can browse all available work requests
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,26 +16,14 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../theme/theme';
 import { ContractorStackScreenProps } from '../../types/navigation.types';
-import { RequestStatus } from '../../types/models.types';
+import { Request, RequestStatus } from '../../types/models.types';
 import { APP_CONFIG } from '../../config/app.config';
+import { requestAPI } from '../../api';
 import RequestCard from '../../components/common/RequestCard';
 import EmptyState from '../../components/common/EmptyState';
 import Loading from '../../components/common/Loading';
 
 type Props = ContractorStackScreenProps<'BrowseRequests'>;
-
-interface MockRequest {
-  id: string;
-  title: string;
-  category: string;
-  status: RequestStatus;
-  location: string;
-  budgetMin?: number;
-  budgetMax?: number;
-  datePosted: Date;
-  bidCount: number;
-  societyName: string;
-}
 
 const BrowseRequestsScreen: React.FC<Props> = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -43,72 +31,40 @@ const BrowseRequestsScreen: React.FC<Props> = ({ navigation }) => {
   const [selectedCity, setSelectedCity] = useState<string>('All');
   const [categoryMenuVisible, setCategoryMenuVisible] = useState(false);
   const [cityMenuVisible, setCityMenuVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [requests, setRequests] = useState<Request[]>([]);
 
-  // TODO: Replace with actual API data
-  const [requests, setRequests] = useState<MockRequest[]>([
-    {
-      id: '1',
-      title: 'Fix Leaking Pipe in Bathroom',
-      category: 'Plumbing',
-      status: RequestStatus.OPEN,
-      location: 'Mumbai',
-      budgetMin: 2000,
-      budgetMax: 5000,
-      datePosted: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      bidCount: 3,
-      societyName: 'Sunshine Apartments',
-    },
-    {
-      id: '2',
-      title: 'Electrical Wiring for New Room',
-      category: 'Electrical',
-      status: RequestStatus.OPEN,
-      location: 'Mumbai',
-      budgetMin: 15000,
-      budgetMax: 25000,
-      datePosted: new Date(Date.now() - 5 * 60 * 60 * 1000),
-      bidCount: 2,
-      societyName: 'Green Valley Society',
-    },
-    {
-      id: '3',
-      title: 'Painting for Living Room',
-      category: 'Painting',
-      status: RequestStatus.OPEN,
-      location: 'Pune',
-      budgetMin: 10000,
-      budgetMax: 15000,
-      datePosted: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-      bidCount: 5,
-      societyName: 'Royal Heights',
-    },
-    {
-      id: '4',
-      title: 'Deep Cleaning of 3BHK Flat',
-      category: 'Cleaning',
-      status: RequestStatus.OPEN,
-      location: 'Mumbai',
-      budgetMin: 3000,
-      budgetMax: 5000,
-      datePosted: new Date(Date.now() - 6 * 60 * 60 * 1000),
-      bidCount: 8,
-      societyName: 'Lake View Residency',
-    },
-    {
-      id: '5',
-      title: 'Carpenter Work for Kitchen Cabinets',
-      category: 'Carpentry',
-      status: RequestStatus.OPEN,
-      location: 'Pune',
-      budgetMin: 20000,
-      budgetMax: 30000,
-      datePosted: new Date(Date.now() - 12 * 60 * 60 * 1000),
-      bidCount: 4,
-      societyName: 'Sai Residency',
-    },
-  ]);
+  // Load requests on mount
+  useEffect(() => {
+    console.log('👷 [BrowseRequestsScreen] Component mounted');
+    loadRequests();
+  }, []);
+
+  // Load requests from API
+  const loadRequests = async () => {
+    try {
+      console.log('📡 [BrowseRequestsScreen] Loading requests...');
+      setIsLoading(true);
+      const response = await requestAPI.getBrowseRequests();
+      console.log('✅ [BrowseRequestsScreen] Requests loaded:', response.requests.length);
+      setRequests(response.requests || []); // Handle empty array
+    } catch (error: any) {
+      console.error('❌ [BrowseRequestsScreen] Error loading requests:', error);
+      console.error('❌ [BrowseRequestsScreen] Response:', error.response?.data);
+      
+      // Handle 404 or empty response gracefully
+      if (error?.response?.status === 404 || !error?.response) {
+        console.log('ℹ️ [BrowseRequestsScreen] No requests found (empty state)');
+        setRequests([]); // Set to empty array, don't show error
+      } else {
+        // Show error for other issues
+        console.error('❌ [BrowseRequestsScreen] API Error:', error?.response?.data || error.message);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Filter options
   const categories = ['All', ...APP_CONFIG.REQUEST_CATEGORIES];
@@ -118,9 +74,9 @@ const BrowseRequestsScreen: React.FC<Props> = ({ navigation }) => {
   const filteredRequests = requests.filter(request => {
     const matchesSearch = request.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          request.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         request.societyName.toLowerCase().includes(searchQuery.toLowerCase());
+                         (request.society?.full_name || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || request.category === selectedCategory;
-    const matchesCity = selectedCity === 'All' || request.location === selectedCity;
+    const matchesCity = selectedCity === 'All' || request.city === selectedCity;
     return matchesSearch && matchesCategory && matchesCity && request.status === RequestStatus.OPEN;
   });
 
@@ -140,21 +96,23 @@ const BrowseRequestsScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   // Render request card
-  const renderRequest = ({ item }: { item: MockRequest }) => (
+  const renderRequest = ({ item }: { item: Request }) => (
     <View>
       <RequestCard
         id={item.id}
         title={item.title}
         category={item.category}
         status={item.status}
-        location={item.location}
-        budgetMin={item.budgetMin}
-        budgetMax={item.budgetMax}
-        datePosted={item.datePosted}
-        bidCount={item.bidCount}
+        location={item.city} // Use city field
+        budgetMin={item.budget_min}
+        budgetMax={item.budget_max}
+        datePosted={new Date(item.created_at)}
+        bidCount={item.bids_count || 0}
         onPress={() => handleRequestPress(item.id)}
       />
-      <Text style={styles.societyName}>📍 {item.societyName}</Text>
+      <Text style={styles.societyName}>
+        🏢 {item.society?.full_name || 'Society'}
+      </Text>
     </View>
   );
 

@@ -31,13 +31,11 @@ type Props = ContractorStackScreenProps<'SubmitBid'>;
 interface FormData {
   bidAmount: string;
   proposal: string;
-  estimatedDays: string;
 }
 
 interface FormErrors {
   bidAmount?: string;
   proposal?: string;
-  estimatedDays?: string;
 }
 
 const SubmitBidScreen: React.FC<Props> = ({ route, navigation }) => {
@@ -46,7 +44,6 @@ const SubmitBidScreen: React.FC<Props> = ({ route, navigation }) => {
   const [formData, setFormData] = useState<FormData>({
     bidAmount: '',
     proposal: '',
-    estimatedDays: '',
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -129,13 +126,8 @@ const SubmitBidScreen: React.FC<Props> = ({ route, navigation }) => {
       newErrors.proposal = 'Proposal is required';
     } else if (formData.proposal.trim().length < 50) {
       newErrors.proposal = 'Proposal must be at least 50 characters';
-    }
-
-    // Estimated days validation (optional but must be valid if provided)
-    if (formData.estimatedDays && isNaN(Number(formData.estimatedDays))) {
-      newErrors.estimatedDays = 'Must be a valid number';
-    } else if (formData.estimatedDays && Number(formData.estimatedDays) <= 0) {
-      newErrors.estimatedDays = 'Must be greater than 0';
+    } else if (formData.proposal.trim().length > 2000) {
+      newErrors.proposal = 'Proposal must not exceed 2000 characters';
     }
 
     setErrors(newErrors);
@@ -154,10 +146,9 @@ const SubmitBidScreen: React.FC<Props> = ({ route, navigation }) => {
     try {
       // Call API to submit bid
       const response = await bidAPI.submitBid({
-        request_id: requestId,
-        bid_amount: Number(formData.bidAmount),
+        request_id: Number(requestId), // Ensure it's a number
+        amount: Number(formData.bidAmount), // Use 'amount' not 'bid_amount'
         proposal: formData.proposal.trim(),
-        estimated_completion_days: formData.estimatedDays ? Number(formData.estimatedDays) : undefined,
       });
 
       Alert.alert(
@@ -232,7 +223,7 @@ const SubmitBidScreen: React.FC<Props> = ({ route, navigation }) => {
                   size={16}
                   color={theme.colors.text.secondary}
                 />
-                <Text style={styles.infoText}>{request.location_city}</Text>
+                <Text style={styles.infoText}>{request.city}</Text>
               </View>
             </View>
 
@@ -305,20 +296,9 @@ const SubmitBidScreen: React.FC<Props> = ({ route, navigation }) => {
               leftIcon="text"
               multiline
               numberOfLines={8}
-              helperText={`${formData.proposal.length}/500 characters (min 50)`}
-              maxLength={500}
+              helperText={`${formData.proposal.length}/2000 characters (min 50)`}
+              maxLength={2000}
               style={styles.textArea}
-            />
-
-            <Input
-              label="Estimated Completion"
-              value={formData.estimatedDays}
-              onChangeText={(value) => updateField('estimatedDays', value)}
-              error={errors.estimatedDays}
-              placeholder="Number of days"
-              leftIcon="calendar"
-              keyboardType="number-pad"
-              helperText="How many days will you need to complete this work?"
             />
 
             {/* Tips */}
@@ -326,7 +306,7 @@ const SubmitBidScreen: React.FC<Props> = ({ route, navigation }) => {
               <Text style={styles.tipsTitle}>💡 Pro Tips</Text>
               <Text style={styles.tipText}>• Be competitive but fair with your pricing</Text>
               <Text style={styles.tipText}>• Highlight your experience in your proposal</Text>
-              <Text style={styles.tipText}>• Provide a realistic timeline</Text>
+              <Text style={styles.tipText}>• Provide a realistic timeline in your proposal</Text>
               <Text style={styles.tipText}>• Mention materials if included in price</Text>
             </View>
 

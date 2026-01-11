@@ -6,19 +6,19 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../theme/theme';
 import { SocietyTabParamList } from '../types/navigation.types';
 
 // Import navigators and screens
 import SocietyStackNavigator from './SocietyStackNavigator';
-// import ProfileScreen from '../screens/shared/ProfileScreen'; // TODO: Create this
-
-// Temporary placeholder for Profile
-import WelcomeScreen from '../screens/auth/WelcomeScreen';
+import ProfileScreen from '../screens/shared/ProfileScreen';
 
 const Tab = createBottomTabNavigator<SocietyTabParamList>();
 
 const SocietyNavigator: React.FC = () => {
+  const insets = useSafeAreaInsets();
+  
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -47,8 +47,8 @@ const SocietyNavigator: React.FC = () => {
           backgroundColor: theme.colors.background.paper,
           borderTopWidth: 1,
           borderTopColor: theme.colors.grey[200],
-          paddingBottom: 5,
-          height: 60,
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 5,
+          height: 60 + (insets.bottom > 0 ? insets.bottom : 0),
         },
         tabBarLabelStyle: {
           fontSize: 12,
@@ -73,7 +73,7 @@ const SocietyNavigator: React.FC = () => {
       />
       <Tab.Screen
         name="SocietyProfile"
-        component={WelcomeScreen as any}
+        component={ProfileScreen}
         options={{
           title: 'Profile',
         }}

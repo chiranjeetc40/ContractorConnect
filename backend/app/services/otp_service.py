@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.repositories.otp_repository import OTPRepository
 from app.core.config import settings
+from app.services.providers import get_otp_provider, get_fallback_provider
 
 
 class OTPService:
@@ -19,6 +20,8 @@ class OTPService:
         """Initialize service with database session."""
         self.db = db
         self.otp_repo = OTPRepository(db)
+        self.primary_provider = None
+        self.fallback_provider = None
     
     def generate_otp_code(self, length: int = 6) -> str:
         """
@@ -71,11 +74,37 @@ class OTPService:
         }
         self.otp_repo.create(otp_data)
         
-        # TODO: Send OTP via SMS provider (Twilio, etc.)
-        # For now, just log it (in production, send via SMS)
-        print(f"📱 OTP for {phone_number}: {otp_code} (expires in {settings.otp_expire_minutes} min)")
-        
-        return otp_code, expires_at
+        # Send OTP via configured provider
+        try:
+            # Initialize provider if not already done
+            if not self.primary_provider:
+                self.primary_provider = get_otp_provider()
+            
+            # Send OTP
+            result = self.primary_provider.send_otp(phone_number, otp_code, purpose)
+            print(f"✅ OTP sent via {self.primary_provider.get_provider_name()}")
+            
+            return otp_code, expires_at
+            
+        except Exception as primary_error:
+            # Log primary provider failure
+            print(f"❌ Primary OTP provider failed: {str(primary_error)}")
+            
+            # Try fallback provider if configured
+            if not self.fallback_provider:
+                self.fallback_provider = get_fallback_provider()
+            
+            if self.fallback_provider:
+                try:
+                    result = self.fallback_provider.send_otp(phone_number, otp_code, purpose)
+                    print(f"✅ OTP sent via fallback: {self.fallback_provider.get_provider_name()}")
+                    return otp_code, expires_at
+                except Exception as fallback_error:
+                    print(f"❌ Fallback OTP provider also failed: {str(fallback_error)}")
+            
+            # If both fail, still return OTP (it's in database) but log error
+            print(f"⚠️ OTP created but not sent. Code: {otp_code}")
+            return otp_code, expires_at
     
     def verify_otp(
         self,

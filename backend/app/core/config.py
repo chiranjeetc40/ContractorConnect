@@ -48,7 +48,31 @@ class Settings(BaseSettings):
     otp_length: int = Field(default=6, alias="OTP_LENGTH")
     max_otp_attempts: int = Field(default=3, alias="MAX_OTP_ATTEMPTS")
     
-    # SMS Provider
+    # OTP Delivery Configuration
+    otp_delivery_method: str = Field(
+        default="console",
+        alias="OTP_DELIVERY_METHOD",
+        description="OTP delivery method: console, email, sms_twilio, whatsapp_twilio, sms_msg91"
+    )
+    otp_fallback_method: Optional[str] = Field(
+        default=None,
+        alias="OTP_FALLBACK_METHOD",
+        description="Fallback OTP delivery method if primary fails"
+    )
+    
+    # Twilio Configuration (for SMS and WhatsApp)
+    twilio_account_sid: Optional[str] = Field(default=None, alias="TWILIO_ACCOUNT_SID")
+    twilio_auth_token: Optional[str] = Field(default=None, alias="TWILIO_AUTH_TOKEN")
+    twilio_phone_number: Optional[str] = Field(default=None, alias="TWILIO_PHONE_NUMBER")
+    twilio_whatsapp_number: Optional[str] = Field(default=None, alias="TWILIO_WHATSAPP_NUMBER")
+    
+    # MSG91 Configuration (India SMS)
+    msg91_auth_key: Optional[str] = Field(default=None, alias="MSG91_AUTH_KEY")
+    msg91_sender_id: str = Field(default="CTRCTR", alias="MSG91_SENDER_ID")
+    msg91_route: str = Field(default="4", alias="MSG91_ROUTE")
+    msg91_template_id: Optional[str] = Field(default=None, alias="MSG91_TEMPLATE_ID")
+    
+    # Legacy SMS Provider (deprecated - use otp_delivery_method instead)
     sms_provider: str = Field(default="twilio", alias="SMS_PROVIDER")
     sms_api_key: Optional[str] = Field(default=None, alias="SMS_API_KEY")
     sms_api_secret: Optional[str] = Field(default=None, alias="SMS_API_SECRET")

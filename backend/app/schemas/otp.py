@@ -2,6 +2,7 @@
 OTP-related Pydantic schemas for request/response validation.
 """
 
+from typing import Optional
 from pydantic import BaseModel, Field, validator
 import re
 
@@ -70,12 +71,15 @@ class OTPResponse(BaseModel):
     message: str
     phone_number: str
     expires_in_minutes: int = Field(default=10, description="OTP validity in minutes")
+    requires_verification: bool = Field(default=True, description="Whether OTP verification is required")
+    user_id: Optional[int] = Field(None, description="User ID if user was created")
     
     class Config:
         json_schema_extra = {
             "example": {
                 "message": "OTP sent successfully",
                 "phone_number": "+919876543210",
-                "expires_in_minutes": 10
+                "expires_in_minutes": 10,
+                "requires_verification": True
             }
         }
