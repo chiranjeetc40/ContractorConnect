@@ -12,7 +12,7 @@ import { User, AuthResponse, UserRole } from '../types/models.types';
 export interface RegisterRequest {
   phone_number: string;
   name: string;
-  email?: string;
+  email: string;  // Now required
   role: UserRole;
   password?: string;  // Optional password for future login
   // Optional fields

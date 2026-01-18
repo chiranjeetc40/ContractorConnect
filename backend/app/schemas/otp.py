@@ -3,24 +3,27 @@ OTP-related Pydantic schemas for request/response validation.
 """
 
 from typing import Optional
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 import re
 
 
 class OTPRequest(BaseModel):
-    """Schema for requesting OTP."""
-    phone_number: str = Field(..., min_length=10, max_length=15, description="Phone number to send OTP")
+    """Schema for requesting OTP (phone number only for login)."""
+    phone_number: str = Field(..., min_length=10, description="Phone number")
     purpose: str = Field(default="login", description="Purpose: login, registration, verification")
     
-    @validator('phone_number')
-    def validate_phone(cls, v):
+    @field_validator('phone_number')
+    @classmethod
+    def validate_phone_number(cls, v):
         """Validate phone number format."""
+        # Phone validation
         cleaned = re.sub(r'[^\d+]', '', v)
         if not re.match(r'^\+?[1-9]\d{9,14}$', cleaned):
             raise ValueError('Invalid phone number format. Use format: +1234567890')
         return cleaned
     
-    @validator('purpose')
+    @field_validator('purpose')
+    @classmethod
     def validate_purpose(cls, v):
         """Validate OTP purpose."""
         allowed = ['login', 'registration', 'verification']
@@ -31,26 +34,29 @@ class OTPRequest(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
-                "phone_number": "+919876543210",
+                "identifier": "+919876543210",
                 "purpose": "login"
             }
         }
 
 
 class OTPVerify(BaseModel):
-    """Schema for verifying OTP."""
-    phone_number: str = Field(..., min_length=10, max_length=15, description="Phone number")
+    """Schema for verifying OTP (phone number only)."""
+    phone_number: str = Field(..., min_length=10, description="Phone number")
     otp_code: str = Field(..., min_length=6, max_length=6, description="6-digit OTP code")
     
-    @validator('phone_number')
-    def validate_phone(cls, v):
+    @field_validator('phone_number')
+    @classmethod
+    def validate_phone_number(cls, v):
         """Validate phone number format."""
+        # Phone validation
         cleaned = re.sub(r'[^\d+]', '', v)
         if not re.match(r'^\+?[1-9]\d{9,14}$', cleaned):
             raise ValueError('Invalid phone number format')
         return cleaned
     
-    @validator('otp_code')
+    @field_validator('otp_code')
+    @classmethod
     def validate_otp(cls, v):
         """Validate OTP code format."""
         if not re.match(r'^\d{6}$', v):
@@ -60,7 +66,7 @@ class OTPVerify(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
-                "phone_number": "+919876543210",
+                "identifier": "+919876543210",
                 "otp_code": "123456"
             }
         }

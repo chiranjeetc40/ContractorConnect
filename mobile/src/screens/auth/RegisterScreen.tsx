@@ -69,6 +69,13 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
       newErrors.email = 'Please enter a valid email address';
     }
 
+    // Email is now required
+    if (!email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
     // Note: Password is optional for OTP-based authentication
     // Password validation removed - using OTP for authentication
 
@@ -89,7 +96,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
       const response = await authAPI.register({
         name: fullName.trim(),
         phone_number: phoneNumber.replace(/\s/g, ''),
-        email: email.trim() || undefined,
+        email: email.trim(),  // Now required
         password: password.trim() || undefined,  // Include password if provided
         role,
       });
@@ -178,7 +185,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
               autoComplete="tel"
             />
 
-            {/* Email (Optional) */}
+            {/* Email (Required) */}
             <Input
               label="Email"
               value={email}
@@ -189,11 +196,12 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                 }
               }}
               error={errors.email}
+              required
               leftIcon="email"
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"
-              helperText="Optional"
+              helperText="OTP will be sent to both phone and email"
             />
 
             {/* Password - For future login */}

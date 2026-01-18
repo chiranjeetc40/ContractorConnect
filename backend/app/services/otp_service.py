@@ -37,41 +37,58 @@ class OTPService:
     
     def create_otp(
         self,
-        phone_number: str,
+        identifier: str,  # Can be phone or email
         purpose: str = "login",
-        user_id: Optional[int] = None
+        user_id: Optional[int] = None,
+        delivery_method: str = "sms"  # "sms" or "email"
     ) -> tuple[str, datetime]:
         """
-        Create and send OTP to phone number.
+        Create and send OTP to phone number or email.
         
         Args:
-            phone_number: Phone number to send OTP
+            identifier: Phone number or email address
             purpose: Purpose of OTP (login, registration, verification)
             user_id: Optional user ID for existing users
+            delivery_method: "sms" or "email"
             
         Returns:
             Tuple of (OTP code, expiry time)
         """
+        print(f"🔍 create_otp called with:")
+        print(f"   identifier: {identifier}")
+        print(f"   purpose: {purpose}")
+        print(f"   user_id: {user_id}")
+        print(f"   delivery_method: {delivery_method}")
+        
         # Check rate limiting
-        recent_count = self.otp_repo.count_recent_attempts(phone_number, minutes=5)
+        recent_count = self.otp_repo.count_recent_attempts(identifier, minutes=5)
         if recent_count >= 3:
             raise ValueError("Too many OTP requests. Please try again after 5 minutes.")
         
         # Invalidate previous OTPs
-        self.otp_repo.invalidate_previous_otps(phone_number, purpose)
+        self.otp_repo.invalidate_previous_otps(identifier, purpose)
         
         # Generate new OTP
         otp_code = self.generate_otp_code(length=settings.otp_length)
         expires_at = datetime.utcnow() + timedelta(minutes=settings.otp_expire_minutes)
         
-        # Save to database
+        # Save to database with appropriate field
         otp_data = {
-            "phone_number": phone_number,
             "otp_code": otp_code,
             "purpose": purpose,
             "user_id": user_id,
             "expires_at": expires_at,
+            "delivery_method": delivery_method,
         }
+        
+        # Set phone or email based on delivery method
+        if delivery_method == "email":
+            otp_data["email"] = identifier
+            otp_data["phone_number"] = None
+        else:
+            otp_data["phone_number"] = identifier
+            otp_data["email"] = None
+            
         self.otp_repo.create(otp_data)
         
         # Send OTP via configured provider
@@ -80,9 +97,18 @@ class OTPService:
             if not self.primary_provider:
                 self.primary_provider = get_otp_provider()
             
-            # Send OTP
-            result = self.primary_provider.send_otp(phone_number, otp_code, purpose)
-            print(f"✅ OTP sent via {self.primary_provider.get_provider_name()}")
+            # Send OTP based on delivery method
+            if delivery_method == "email":
+                # Use email provider
+                print(f"📧 Sending OTP to email: {identifier}")
+                from app.services.providers.email import EmailProvider
+                email_provider = EmailProvider()
+                result = email_provider.send_otp(identifier, otp_code, purpose)
+                print(f"✅ OTP sent via Email to {identifier}")
+            else:
+                # Use SMS provider
+                result = self.primary_provider.send_otp(identifier, otp_code, purpose)
+                print(f"✅ OTP sent via {self.primary_provider.get_provider_name()}")
             
             return otp_code, expires_at
             
@@ -90,17 +116,18 @@ class OTPService:
             # Log primary provider failure
             print(f"❌ Primary OTP provider failed: {str(primary_error)}")
             
-            # Try fallback provider if configured
-            if not self.fallback_provider:
-                self.fallback_provider = get_fallback_provider()
-            
-            if self.fallback_provider:
-                try:
-                    result = self.fallback_provider.send_otp(phone_number, otp_code, purpose)
-                    print(f"✅ OTP sent via fallback: {self.fallback_provider.get_provider_name()}")
-                    return otp_code, expires_at
-                except Exception as fallback_error:
-                    print(f"❌ Fallback OTP provider also failed: {str(fallback_error)}")
+            # Try fallback provider if configured (only for SMS)
+            if delivery_method == "sms":
+                if not self.fallback_provider:
+                    self.fallback_provider = get_fallback_provider()
+                
+                if self.fallback_provider:
+                    try:
+                        result = self.fallback_provider.send_otp(identifier, otp_code, purpose)
+                        print(f"✅ OTP sent via fallback: {self.fallback_provider.get_provider_name()}")
+                        return otp_code, expires_at
+                    except Exception as fallback_error:
+                        print(f"❌ Fallback OTP provider also failed: {str(fallback_error)}")
             
             # If both fail, still return OTP (it's in database) but log error
             print(f"⚠️ OTP created but not sent. Code: {otp_code}")
@@ -108,23 +135,23 @@ class OTPService:
     
     def verify_otp(
         self,
-        phone_number: str,
+        identifier: str,  # Phone or email
         otp_code: str,
         purpose: str = "login"
     ) -> bool:
         """
-        Verify OTP code.
+        Verify OTP code. Supports both phone and email.
         
         Args:
-            phone_number: Phone number
+            identifier: Phone number or email
             otp_code: OTP code to verify
             purpose: Purpose of OTP
             
         Returns:
             True if valid, raises ValueError if invalid
         """
-        # Get valid OTP
-        otp = self.otp_repo.get_valid_otp(phone_number, otp_code, purpose)
+        # Get valid OTP (repository handles phone vs email)
+        otp = self.otp_repo.get_valid_otp(identifier, otp_code, purpose)
         
         if not otp:
             raise ValueError("Invalid or expired OTP code")

@@ -13,7 +13,7 @@ from app.models.user import UserRole, UserStatus
 class UserBase(BaseModel):
     """Base user schema with common fields."""
     phone_number: str = Field(..., min_length=10, max_length=15, description="Phone number with country code")
-    email: Optional[str] = Field(None, max_length=255, description="Email address")
+    email: str = Field(..., max_length=255, description="Email address (required)")
     name: Optional[str] = Field(None, max_length=255, description="Full name")
     role: UserRole = Field(default=UserRole.CONTRACTOR, description="User role")
     

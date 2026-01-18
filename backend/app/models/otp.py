@@ -33,7 +33,9 @@ class OTP(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
     
     # OTP Details
-    phone_number = Column(String(15), index=True, nullable=False)
+    phone_number = Column(String(15), index=True, nullable=True)  # For SMS OTPs
+    email = Column(String(255), index=True, nullable=True)  # For Email OTPs
+    delivery_method = Column(String(10), nullable=False, default="sms")  # 'sms' or 'email'
     otp_code = Column(String(6), nullable=False)
     purpose = Column(String(50), nullable=False, default="login")  # login, registration, verification
     

@@ -80,30 +80,41 @@ async def register(
     response_model=OTPResponse,
     summary="Request Login OTP",
     description="""
-    Request OTP for login.
+    Request OTP for login using phone number. OTP will be sent to both phone and email.
     
     **Process:**
     1. User provides phone number
     2. System verifies user exists and is active
-    3. OTP is sent to phone number
-    4. User has 10 minutes to verify OTP
+    3. System fetches email from database
+    4. OTP is sent to BOTH phone (SMS) and email
+    5. User can enter OTP from either source
+    6. User has 10 minutes to verify OTP
+    
+    **Important:**
+    - Both phone and email are required for registration
+    - OTP is sent to both channels for security
+    - User can verify using OTP from either phone or email
+    
+    **Supported Format:**
+    - Phone: +919876543210 or 9876543210
     
     **Rate Limiting:**
     - Maximum 3 OTP requests per 5 minutes per phone number
     
     **Returns:**
     - Message confirming OTP sent
-    - Phone number
+    - Phone number and email (masked)
     - OTP expiry time
     """,
     responses={
         200: {
-            "description": "OTP sent successfully",
+            "description": "OTP sent successfully to both phone and email",
             "content": {
                 "application/json": {
                     "example": {
-                        "message": "OTP sent successfully",
+                        "message": "OTP sent to both your phone and email",
                         "phone_number": "+919876543210",
+                        "email": "user@example.com",
                         "expires_in_minutes": 10
                     }
                 }
@@ -117,7 +128,7 @@ async def login(
     otp_request: OTPRequest,
     db: Session = Depends(get_db)
 ):
-    """Request OTP for login."""
+    """Request OTP for login using phone number. OTP sent to both phone and email."""
     try:
         auth_service = AuthService(db)
         result = auth_service.request_login_otp(otp_request.phone_number)

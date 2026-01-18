@@ -187,3 +187,16 @@ class UserService:
             List of society users
         """
         return self.user_repo.get_by_role(UserRole.SOCIETY, skip, limit)
+
+    def list_users(self, skip: int = 0, limit: int = 100):
+        """
+        List all users.
+        
+        Args:
+            skip: Number of records to skip
+            limit: Maximum number of records
+            
+        Returns:
+            List of user objects
+        """
+        return self.user_repo.list(skip=skip, limit=limit)

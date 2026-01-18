@@ -243,3 +243,16 @@ class UserRepository:
             True if exists
         """
         return self.db.query(User).filter(User.email == email).count() > 0
+
+    def list(self, skip: int = 0, limit: int = 100) -> List[User]:
+        """
+        List all users with pagination.
+        
+        Args:
+            skip: Number of records to skip
+            limit: Maximum number of records to return
+            
+        Returns:
+            List of User objects
+        """
+        return self.db.query(User).offset(skip).limit(limit).all()

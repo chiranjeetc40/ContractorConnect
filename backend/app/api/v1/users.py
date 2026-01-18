@@ -2,6 +2,7 @@
 User management API endpoints.
 """
 
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -9,7 +10,7 @@ from app.core.database import get_db
 from app.services.user_service import UserService
 from app.api.dependencies import get_current_active_user, get_current_verified_user
 from app.schemas.user import UserUpdate, UserProfile, UserResponse
-from app.models.user import User
+from app.models.user import User, UserRole
 
 router = APIRouter()
 
@@ -68,6 +69,56 @@ async def get_profile(
 ):
     """Get current user's complete profile."""
     return current_user
+
+
+@router.get(
+    "/users",
+    response_model=List[UserResponse],
+    summary="List All Users",
+    description="""
+    List all users in the system (Admin only).
+    
+    **Authentication Required:**
+    Valid JWT access token with admin role.
+    
+    **Parameters:**
+    - skip: Number of records to skip (pagination)
+    - limit: Maximum number of records to return
+    
+    **Returns:**
+    List of users with public information.
+    
+    **Note:** Only administrators can access this endpoint.
+    """,
+    responses={
+        200: {"description": "List of users retrieved successfully"},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Insufficient permissions - Admin only"}
+    }
+)
+async def list_all_users(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    List all users (Admin only).
+    
+    **Requires admin role**
+    """
+    # Check if user is admin
+    print(f"👥 DEBUG list_all_users - Current User: {current_user}")
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can access this endpoint"
+        )
+    user_service = UserService(db)
+    users = user_service.list_users(skip=skip, limit=limit)
+    print(f"👥 DEBUG list_all_users - Retrieved {len(users)} users")
+    print(f"👥 DEBUG list_all_users - Users: {users}")
+    return users
 
 
 @router.put(

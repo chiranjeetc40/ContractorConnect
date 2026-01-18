@@ -62,12 +62,13 @@ class OTPRepository:
             .first()
         )
     
-    def get_valid_otp(self, phone_number: str, otp_code: str, purpose: str = "login") -> Optional[OTP]:
+    def get_valid_otp(self, identifier: str, otp_code: str, purpose: str = "login") -> Optional[OTP]:
         """
         Get valid (not used, not expired) OTP for verification.
+        Supports both phone number and email.
         
         Args:
-            phone_number: Phone number
+            identifier: Phone number or email
             otp_code: OTP code
             purpose: OTP purpose
             
@@ -75,17 +76,34 @@ class OTPRepository:
             OTP object or None
         """
         now = datetime.utcnow()
-        return (
-            self.db.query(OTP)
-            .filter(
-                OTP.phone_number == phone_number,
-                OTP.otp_code == otp_code,
-                OTP.purpose == purpose,
-                OTP.is_used == False,
-                OTP.expires_at > now
+        
+        # Check if identifier is email
+        is_email = '@' in identifier
+        
+        if is_email:
+            return (
+                self.db.query(OTP)
+                .filter(
+                    OTP.email == identifier,
+                    OTP.otp_code == otp_code,
+                    OTP.purpose == purpose,
+                    OTP.is_used == False,
+                    OTP.expires_at > now
+                )
+                .first()
             )
-            .first()
-        )
+        else:
+            return (
+                self.db.query(OTP)
+                .filter(
+                    OTP.phone_number == identifier,
+                    OTP.otp_code == otp_code,
+                    OTP.purpose == purpose,
+                    OTP.is_used == False,
+                    OTP.expires_at > now
+                )
+                .first()
+            )
     
     def mark_as_used(self, otp: OTP) -> OTP:
         """
@@ -104,26 +122,39 @@ class OTPRepository:
         self.db.refresh(otp)
         return otp
     
-    def invalidate_previous_otps(self, phone_number: str, purpose: str = "login") -> int:
+    def invalidate_previous_otps(self, identifier: str, purpose: str = "login") -> int:
         """
-        Invalidate (mark as used) all previous OTPs for a phone number.
+        Invalidate (mark as used) all previous OTPs for a phone number or email.
         
         Args:
-            phone_number: Phone number
+            identifier: Phone number or email
             purpose: OTP purpose
             
         Returns:
             Number of OTPs invalidated
         """
-        count = (
-            self.db.query(OTP)
-            .filter(
-                OTP.phone_number == phone_number,
-                OTP.purpose == purpose,
-                OTP.is_used == False
+        is_email = '@' in identifier
+        
+        if is_email:
+            count = (
+                self.db.query(OTP)
+                .filter(
+                    OTP.email == identifier,
+                    OTP.purpose == purpose,
+                    OTP.is_used == False
+                )
+                .update({"is_used": True})
             )
-            .update({"is_used": True})
-        )
+        else:
+            count = (
+                self.db.query(OTP)
+                .filter(
+                    OTP.phone_number == identifier,
+                    OTP.purpose == purpose,
+                    OTP.is_used == False
+                )
+                .update({"is_used": True})
+            )
         self.db.commit()
         return count
     
@@ -168,26 +199,38 @@ class OTPRepository:
             .all()
         )
     
-    def count_recent_attempts(self, phone_number: str, minutes: int = 5) -> int:
+    def count_recent_attempts(self, identifier: str, minutes: int = 5) -> int:
         """
-        Count OTP attempts for rate limiting.
+        Count OTP attempts for rate limiting. Supports phone and email.
         
         Args:
-            phone_number: Phone number
+            identifier: Phone number or email
             minutes: Recent minutes to check
             
         Returns:
             Number of OTP attempts
         """
         cutoff_time = datetime.utcnow() - timedelta(minutes=minutes)
-        return (
-            self.db.query(OTP)
-            .filter(
-                OTP.phone_number == phone_number,
-                OTP.created_at > cutoff_time
+        is_email = '@' in identifier
+        
+        if is_email:
+            return (
+                self.db.query(OTP)
+                .filter(
+                    OTP.email == identifier,
+                    OTP.created_at > cutoff_time
+                )
+                .count()
             )
-            .count()
-        )
+        else:
+            return (
+                self.db.query(OTP)
+                .filter(
+                    OTP.phone_number == identifier,
+                    OTP.created_at > cutoff_time
+                )
+                .count()
+            )
     
     def get_by_user(self, user_id: int, skip: int = 0, limit: int = 10) -> List[OTP]:
         """

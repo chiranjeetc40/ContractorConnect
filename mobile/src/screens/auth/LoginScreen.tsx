@@ -210,7 +210,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             {/* OTP Info (only for OTP login) */}
             {loginMethod === 'otp' && (
               <Text style={styles.otpInfoText}>
-                📱 An OTP will be sent to your phone number for verification
+                📱 ✉️ OTP will be sent to both your registered phone number and email
               </Text>
             )}
 

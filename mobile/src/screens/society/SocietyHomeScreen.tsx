@@ -169,8 +169,8 @@ const SocietyHomeScreen: React.FC<Props> = ({ navigation }) => {
         icon="📭"
         title="No Requests Yet"
         description="Create your first request to get started with finding contractors"
-        actionLabel="Create Request"
-        onAction={handleCreateRequest}
+        // actionLabel="Create Request"
+        // onAction={handleCreateRequest}
       />
     );
   };
@@ -227,7 +227,7 @@ const SocietyHomeScreen: React.FC<Props> = ({ navigation }) => {
           styles.fab, 
           { 
             bottom: insets.bottom > 0 
-              ? insets.bottom + 70  // Add space for tab bar + padding
+              ? insets.bottom   // Add space for tab bar + padding
               : 80  // Default bottom position when no insets
           }
         ]}

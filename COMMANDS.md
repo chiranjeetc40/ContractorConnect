@@ -107,47 +107,6 @@ psql -U contractor_user -d contractorconnect_dev
 \q              # Quit
 ```
 
-### Create Database
-```sql
-CREATE DATABASE contractorconnect_dev;
-CREATE USER contractor_user WITH PASSWORD 'contractor_pass';
-GRANT ALL PRIVILEGES ON DATABASE contractorconnect_dev TO contractor_user;
-```
-
-## Git Commands
-
-### Basic Workflow
-```powershell
-# Check status
-git status
-
-# Add files
-git add .
-
-# Commit
-git commit -m "feat: your feature description"
-
-# Push
-git push origin branch-name
-
-# Pull latest
-git pull origin main
-```
-
-### Branching
-```powershell
-# Create and switch to new branch
-git checkout -b feature/your-feature
-
-# Switch branch
-git checkout branch-name
-
-# List branches
-git branch
-
-# Delete branch
-git branch -d branch-name
-```
 
 ## Useful URLs
 
@@ -177,20 +136,6 @@ netstat -ano | findstr :8000
 taskkill /PID <process_id> /F
 ```
 
-### Python Environment
-```powershell
-# Check Python version
-python --version
-
-# Check pip version
-pip --version
-
-# List installed packages
-pip list
-
-# Show package info
-pip show package-name
-```
 
 ### Database Connection Test
 ```powershell
