@@ -117,9 +117,7 @@ const SubmitBidScreen: React.FC<Props> = ({ route, navigation }) => {
       newErrors.bidAmount = 'Must be a valid number';
     } else if (Number(formData.bidAmount) <= 0) {
       newErrors.bidAmount = 'Amount must be greater than 0';
-    } else if (request?.budget_max && Number(formData.bidAmount) > request.budget_max * 1.5) {
-      newErrors.bidAmount = 'Amount seems too high for this request';
-    }
+    } 
 
     // Proposal validation
     if (!formData.proposal.trim()) {
@@ -231,18 +229,7 @@ const SubmitBidScreen: React.FC<Props> = ({ route, navigation }) => {
               {request.description}
             </Text>
 
-            {(request.budget_min || request.budget_max) && (
-              <View style={styles.budgetInfo}>
-                <Text style={styles.budgetLabel}>Budget Range:</Text>
-                <Text style={styles.budgetValue}>
-                  {request.budget_min && request.budget_max
-                    ? `₹${request.budget_min.toLocaleString('en-IN')} - ₹${request.budget_max.toLocaleString('en-IN')}`
-                    : request.budget_min
-                    ? `₹${request.budget_min.toLocaleString('en-IN')}+`
-                    : `Up to ₹${request.budget_max?.toLocaleString('en-IN')}`}
-                </Text>
-              </View>
-            )}
+           
           </View>
 
           {/* Bid Statistics */}

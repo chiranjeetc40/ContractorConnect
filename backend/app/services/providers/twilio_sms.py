@@ -62,11 +62,16 @@ class TwilioSMSProvider(OTPDeliveryProvider):
         message_body = self.format_message(otp_code, purpose)
         
         try:
+            print(f"📱 Sending SMS via Twilio to +91{recipient}")
+            print(f"📱 From: {self.from_number}")
+            
             message = self.client.messages.create(
-                body=message_body,
                 from_=self.from_number,
-                to=recipient
+                body=message_body,
+                to=f'+91{recipient}'
             )
+            
+            print(f"✅ SMS sent successfully! SID: {message.sid}, Status: {message.status}")
             
             return {
                 "success": True,

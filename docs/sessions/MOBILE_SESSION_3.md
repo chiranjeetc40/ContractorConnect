@@ -45,7 +45,6 @@
   - Status chip (small size)
   - Category with icon (8 categories supported)
   - Location (city only)
-  - Budget range (formatted with ₹ symbol, Indian locale)
   - Date posted (relative time: "2h ago", "Yesterday", "10d ago")
   - Bid count badge
 - **Category Icons:** Plumbing, Electrical, Carpentry, Painting, Cleaning, Gardening, Security, Other
@@ -127,7 +126,6 @@
     - City (required)
     - State (required)
     - Pincode (required, must be 6 digits)
-  - **Budget Range** (optional):
     - Minimum budget (numeric)
     - Maximum budget (numeric, must be > min)
 - **Validation:**
@@ -154,7 +152,6 @@
   - **Details Tab:**
     - Full description
     - Location (address, city, state, pincode)
-    - Budget range (if provided)
     - Posted and updated timestamps
     - Category badge
     - Status chip
@@ -336,7 +333,6 @@ RootNavigator
    - Real-time validation
    - Character counters
    - Category picker with icons
-   - Budget range (optional)
    - Success feedback
 
 4. **Request Details:**
@@ -385,7 +381,6 @@ RootNavigator
    - Select category (tap button)
    - Enter description (min 50 chars)
    - Fill location fields (city, state, pincode)
-   - Optional: Enter budget range
    - Tap "Create Request"
    - See success message
    - Redirected to home
@@ -396,7 +391,6 @@ RootNavigator
    - **Details Tab:**
      - See full description
      - View location info
-     - Check budget range
      - See timestamps
      - Tap "Edit" or "Cancel" (alerts)
    - **Bids Tab:**
@@ -506,7 +500,7 @@ RootNavigator
 2. **BrowseRequestsScreen** (~350 lines)
    - List of all open requests (from all societies)
    - Search by title, category, location
-   - Filter by category, budget range, location
+   - Filter by category, location
    - Sort by date, budget
    - RequestCard components
    - Pull-to-refresh

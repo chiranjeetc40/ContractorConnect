@@ -38,20 +38,11 @@ class RequestCreate(RequestBase):
     """Schema for creating a new request."""
     location: Optional[str] = Field(None, description="Detailed location/address")
     pincode: Optional[str] = Field(None, max_length=10, description="Postal code")
-    budget_min: Optional[float] = Field(None, ge=0, description="Minimum budget in rupees")
-    budget_max: Optional[float] = Field(None, ge=0, description="Maximum budget in rupees")
     estimated_duration_days: Optional[int] = Field(None, ge=1, description="Estimated work duration in days")
     required_skills: Optional[str] = Field(None, description="Required skills (comma-separated)")
     preferred_start_date: Optional[datetime] = Field(None, description="Preferred start date")
     images: Optional[str] = Field(None, description="Image URLs (comma-separated)")
     
-    @validator('budget_max')
-    def validate_budget(cls, v, values):
-        """Validate budget range."""
-        if v and 'budget_min' in values and values['budget_min']:
-            if v < values['budget_min']:
-                raise ValueError('Maximum budget cannot be less than minimum budget')
-        return v
     
     class Config:
         json_schema_extra = {
@@ -63,8 +54,6 @@ class RequestCreate(RequestBase):
                 "state": "Maharashtra",
                 "pincode": "400001",
                 "location": "Building A, Wing 2, Flat 301",
-                "budget_min": 50000,
-                "budget_max": 75000,
                 "estimated_duration_days": 15,
                 "required_skills": "tiling, plumbing, waterproofing",
                 "preferred_start_date": "2025-01-15T00:00:00"
@@ -81,8 +70,6 @@ class RequestUpdate(BaseModel):
     city: Optional[str] = Field(None, min_length=2, max_length=100)
     state: Optional[str] = Field(None, min_length=2, max_length=100)
     pincode: Optional[str] = Field(None, max_length=10)
-    budget_min: Optional[float] = Field(None, ge=0)
-    budget_max: Optional[float] = Field(None, ge=0)
     estimated_duration_days: Optional[int] = Field(None, ge=1)
     required_skills: Optional[str] = None
     preferred_start_date: Optional[datetime] = None
@@ -92,7 +79,6 @@ class RequestUpdate(BaseModel):
         json_schema_extra = {
             "example": {
                 "title": "Updated: Bathroom Renovation",
-                "budget_max": 80000,
                 "estimated_duration_days": 20
             }
         }
@@ -125,8 +111,6 @@ class RequestResponse(BaseModel):
     city: str
     state: str
     pincode: Optional[str]
-    budget_min: Optional[float]
-    budget_max: Optional[float]
     estimated_duration_days: Optional[int]
     required_skills: Optional[str]
     preferred_start_date: Optional[datetime]
@@ -137,7 +121,6 @@ class RequestResponse(BaseModel):
     completed_at: Optional[datetime]
     
     # Computed fields
-    budget_range_str: Optional[str] = None
     image_list: Optional[List[str]] = None
     skill_list: Optional[List[str]] = None
     
@@ -154,8 +137,6 @@ class RequestResponse(BaseModel):
                 "status": "open",
                 "city": "Mumbai",
                 "state": "Maharashtra",
-                "budget_min": 50000,
-                "budget_max": 75000,
                 "created_at": "2025-12-28T10:00:00"
             }
         }
@@ -185,8 +166,6 @@ class RequestSearchFilters(BaseModel):
     status: Optional[RequestStatus] = None
     city: Optional[str] = None
     state: Optional[str] = None
-    budget_min: Optional[float] = Field(None, ge=0)
-    budget_max: Optional[float] = Field(None, ge=0)
     search_query: Optional[str] = Field(None, description="Search in title and description")
     
     class Config:
@@ -195,6 +174,5 @@ class RequestSearchFilters(BaseModel):
                 "category": "renovation",
                 "status": "open",
                 "city": "Mumbai",
-                "budget_max": 100000
             }
         }

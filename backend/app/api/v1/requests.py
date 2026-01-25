@@ -48,7 +48,6 @@ def get_request_service(db: Session = Depends(get_db)) -> RequestService:
     - location details: address, city, state, pincode
     
     **Optional fields:**
-    - budget_min, budget_max: Budget range
     - required_skills: Comma-separated skills needed
     - expected_start_date, expected_completion_date: Timeline
     - images: Comma-separated image URLs
@@ -123,7 +122,6 @@ async def list_requests(
     - category: Work category
     - status: Request status
     - city, state: Location filters
-    - budget_min, budget_max: Budget range filters
     
     **Pagination:**
     - skip, limit: Standard pagination parameters
@@ -135,8 +133,6 @@ async def search_requests(
     status: Optional[RequestStatus] = Query(None, description="Filter by status"),
     city: Optional[str] = Query(None, description="Filter by city"),
     state: Optional[str] = Query(None, description="Filter by state"),
-    budget_min: Optional[float] = Query(None, ge=0, description="Minimum budget"),
-    budget_max: Optional[float] = Query(None, ge=0, description="Maximum budget"),
     skip: int = Query(0, ge=0, description="Records to skip"),
     limit: int = Query(20, ge=1, le=100, description="Records to return"),
     service: RequestService = Depends(get_request_service)
@@ -148,8 +144,6 @@ async def search_requests(
         status=status,
         city=city,
         state=state,
-        budget_min=budget_min,
-        budget_max=budget_max,
         skip=skip,
         limit=limit
     )
@@ -219,7 +213,6 @@ async def get_assigned_requests(
     Returns complete request data including:
     - Basic info (title, description, category)
     - Location details
-    - Budget range
     - Status and timeline
     - Society and contractor info (if assigned)
     
@@ -250,7 +243,6 @@ async def get_request(
     - title, description
     - category
     - location details
-    - budget range
     - required skills
     - expected dates
     - images

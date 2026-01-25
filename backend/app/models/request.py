@@ -12,16 +12,19 @@ from app.core.database import Base
 
 class RequestCategory(str, enum.Enum):
     """Request category enumeration."""
-    CONSTRUCTION = "construction"
-    RENOVATION = "renovation"
-    PLUMBING = "plumbing"
-    ELECTRICAL = "electrical"
-    PAINTING = "painting"
-    FLOORING = "flooring"
-    ROOFING = "roofing"
-    LANDSCAPING = "landscaping"
-    INTERIOR_DESIGN = "interior_design"
-    OTHER = "other"
+    CONSTRUCTION = "CONSTRUCTION"
+    STRUCTURAL_FIX = "STRUCTURAL_FIX"
+    RENOVATION = "RENOVATION"
+    PLUMBING = "PLUMBING"
+    ELECTRICAL = "ELECTRICAL"
+    PAINTING = "PAINTING"
+    FLOORING = "FLOORING"
+    ROOFING = "ROOFING"
+    LANDSCAPING = "LANDSCAPING"
+    CARPENTRY = "CARPENTRY"
+    CLEANING = "CLEANING"
+    INTERIOR_DESIGN = "INTERIOR_DESIGN"
+    OTHER = "OTHER"
 
 
 class RequestStatus(str, enum.Enum):
@@ -49,8 +52,6 @@ class Request(Base):
         city: City
         state: State
         pincode: Postal code
-        budget_min: Minimum budget
-        budget_max: Maximum budget
         estimated_duration_days: Estimated work duration
         required_skills: Comma-separated skills needed
         preferred_start_date: When work should start
@@ -82,10 +83,7 @@ class Request(Base):
     state = Column(String(100), nullable=False)
     pincode = Column(String(10), nullable=True)
     
-    # Budget
-    budget_min = Column(Float, nullable=True)
-    budget_max = Column(Float, nullable=True)
-    
+
     # Additional Details
     estimated_duration_days = Column(Integer, nullable=True)
     required_skills = Column(Text, nullable=True)  # Comma-separated
@@ -122,17 +120,6 @@ class Request(Base):
     def has_assigned_contractor(self) -> bool:
         """Check if contractor is assigned."""
         return self.assigned_contractor_id is not None
-    
-    @property
-    def budget_range_str(self) -> str:
-        """Get budget range as string."""
-        if self.budget_min and self.budget_max:
-            return f"₹{self.budget_min:,.0f} - ₹{self.budget_max:,.0f}"
-        elif self.budget_min:
-            return f"₹{self.budget_min:,.0f}+"
-        elif self.budget_max:
-            return f"Up to ₹{self.budget_max:,.0f}"
-        return "Budget not specified"
     
     @property
     def image_list(self) -> list:

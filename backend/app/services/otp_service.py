@@ -93,20 +93,31 @@ class OTPService:
         
         # Send OTP via configured provider
         try:
-            # Initialize provider if not already done
-            if not self.primary_provider:
-                self.primary_provider = get_otp_provider()
-            
-            # Send OTP based on delivery method
+            # Send OTP based on delivery method (dynamically select provider)
             if delivery_method == "email":
+                # Check if SMTP is enabled
+                if not settings.smtp_enabled:
+                    print(f"⚠️  SMTP is disabled (SMTP_ENABLED=false). Skipping email OTP.")
+                    print(f"💡 OTP saved in database but not sent: {otp_code}")
+                    return otp_code, expires_at
+                
                 # Use email provider
                 print(f"📧 Sending OTP to email: {identifier}")
                 from app.services.providers.email import EmailProvider
                 email_provider = EmailProvider()
+                print(f"📦 Using Email provider: {email_provider.get_provider_name()}")
                 result = email_provider.send_otp(identifier, otp_code, purpose)
                 print(f"✅ OTP sent via Email to {identifier}")
-            else:
-                # Use SMS provider
+                
+            else:  # SMS delivery
+                # Initialize SMS provider if not already done
+                if not self.primary_provider:
+                    # Get SMS provider from settings (sms_twilio, sms_msg91, etc.)
+                    from app.services.providers import get_otp_provider
+                    self.primary_provider = get_otp_provider()
+                
+                print(f"📱 Sending OTP via SMS to: {identifier}")
+                print(f"📦 Using SMS provider: {self.primary_provider.get_provider_name()}")
                 result = self.primary_provider.send_otp(identifier, otp_code, purpose)
                 print(f"✅ OTP sent via {self.primary_provider.get_provider_name()}")
             
@@ -123,6 +134,7 @@ class OTPService:
                 
                 if self.fallback_provider:
                     try:
+                        print(f"🔄 Trying fallback provider: {self.fallback_provider.get_provider_name()}")
                         result = self.fallback_provider.send_otp(identifier, otp_code, purpose)
                         print(f"✅ OTP sent via fallback: {self.fallback_provider.get_provider_name()}")
                         return otp_code, expires_at

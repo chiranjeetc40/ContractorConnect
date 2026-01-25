@@ -43,8 +43,6 @@ export interface Request {
   city: string;
   state: string;
   pincode?: string;
-  budget_min?: number;
-  budget_max?: number;
   status: RequestStatus;
   created_at: string;
   updated_at: string;

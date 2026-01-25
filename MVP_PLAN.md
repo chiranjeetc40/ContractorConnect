@@ -202,7 +202,6 @@ CreateRequestScreen
   ├── Description textarea
   ├── Category dropdown
   ├── Address, City, State, Pincode
-  ├── Budget range (min-max)
   ├── Expected dates
   └── [Submit Button]
 

@@ -154,7 +154,6 @@ Press R in Expo terminal
 1. Should see your request card with:
    - Title
    - Category
-   - Budget range
    - Location
    - "0 Bids" (no bids yet)
    - Status: Open

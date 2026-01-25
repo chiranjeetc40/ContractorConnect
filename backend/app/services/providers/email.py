@@ -80,11 +80,24 @@ class EmailProvider(OTPDeliveryProvider):
         message.attach(part2)
         
         try:
-            # Connect to SMTP server
-            with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
-                server.starttls()
-                server.login(self.smtp_user, self.smtp_password)
-                server.send_message(message)
+            # Connect to SMTP server with better error handling and SSL support
+            print(f"📧 Attempting to send email to {recipient}")
+            print(f"📧 SMTP Host: {self.smtp_host}:{self.smtp_port}")
+            
+            # Try SSL connection first (port 465) - more reliable on cloud platforms
+            if self.smtp_port == 465:
+                # Use SMTP_SSL for port 465
+                with smtplib.SMTP_SSL(self.smtp_host, self.smtp_port, timeout=30) as server:
+                    server.login(self.smtp_user, self.smtp_password)
+                    server.send_message(message)
+                    print(f"✅ Email sent successfully via SSL to {recipient}")
+            else:
+                # Use STARTTLS for ports 587 or 25
+                with smtplib.SMTP(self.smtp_host, self.smtp_port, timeout=30) as server:
+                    server.starttls()
+                    server.login(self.smtp_user, self.smtp_password)
+                    server.send_message(message)
+                    print(f"✅ Email sent successfully via STARTTLS to {recipient}")
             
             return {
                 "success": True,
@@ -95,6 +108,7 @@ class EmailProvider(OTPDeliveryProvider):
             
         except Exception as e:
             print(f"❌ Email Error: {str(e)}")
+            print(f"❌ Failed with SMTP {self.smtp_host}:{self.smtp_port}")
             raise Exception(f"Failed to send email: {str(e)}")
     
     def _create_html_body(self, otp_code: str, purpose: str) -> str:

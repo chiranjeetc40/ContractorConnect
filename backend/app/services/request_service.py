@@ -139,8 +139,6 @@ class RequestService:
             status=filters.status,
             city=filters.city,
             state=filters.state,
-            budget_min=filters.budget_min,
-            budget_max=filters.budget_max,
             skip=filters.skip,
             limit=filters.limit
         )

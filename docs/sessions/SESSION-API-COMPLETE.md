@@ -334,7 +334,7 @@ curl http://localhost:8000/api/v1/auth/me \
 ### Phase 2: Request Management (Week 5-8)
 1. **Request Model**:
    - Title, description, category
-   - Location, budget range
+   - Location
    - Status (open, in_progress, completed)
    - Images/attachments
 
@@ -347,7 +347,6 @@ curl http://localhost:8000/api/v1/auth/me \
 
 3. **Search & Filter**:
    - By category, location
-   - By budget range
    - By status
 
 ### Phase 3: Bidding System (Week 9-12)

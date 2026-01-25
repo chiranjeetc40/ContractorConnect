@@ -415,10 +415,7 @@ const spacing = {
 │  │ City, State, Pincode        ││
 │  └─────────────────────────────┘│
 │                                 │
-│  Budget Range                   │
-│  ┌──────────────┐ ┌──────────────┐│
-│  │ Min: ₹5,000 │ │ Max: ₹10,000││
-│  └──────────────┘ └──────────────┘│
+│                                  │
 │                                 │
 │  ┌─────────────────────────────┐│
 │  │    Post Request            ││
@@ -511,7 +508,6 @@ const spacing = {
 │                                 │
 │  Request: Kitchen Plumbing      │
 │  Society: ABC Housing Society   │
-│  Budget Range: ₹5,000-₹10,000  │
 │                                 │
 │  Your Bid Amount *              │
 │  ┌─────────────────────────────┐│

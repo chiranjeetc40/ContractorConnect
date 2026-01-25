@@ -234,27 +234,6 @@ const RequestDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
           </Text>
         </View>
 
-        {/* Budget */}
-        {(request.budget_min || request.budget_max) && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <MaterialCommunityIcons
-                name="cash"
-                size={20}
-                color={theme.colors.success as any}
-              />
-              <Text style={styles.sectionTitle}>Budget Range</Text>
-            </View>
-            <Text style={styles.budgetText}>
-              {request.budget_min && request.budget_max
-                ? `₹${request.budget_min.toLocaleString('en-IN')} - ₹${request.budget_max.toLocaleString('en-IN')}`
-                : request.budget_min
-                ? `₹${request.budget_min.toLocaleString('en-IN')}+`
-                : `Up to ₹${request.budget_max?.toLocaleString('en-IN')}`}
-            </Text>
-          </View>
-        )}
-
         {/* Timestamps */}
         <View style={styles.section}>
           <View style={styles.timestampRow}>

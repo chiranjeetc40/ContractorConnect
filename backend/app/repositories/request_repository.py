@@ -95,8 +95,6 @@ class RequestRepository:
         status: Optional[RequestStatus] = None,
         city: Optional[str] = None,
         state: Optional[str] = None,
-        budget_min: Optional[float] = None,
-        budget_max: Optional[float] = None,
         skip: int = 0,
         limit: int = 20
     ) -> tuple[List[Request], int]:
@@ -109,8 +107,6 @@ class RequestRepository:
             status: Filter by status
             city: Filter by city
             state: Filter by state
-            budget_min: Minimum budget filter
-            budget_max: Maximum budget filter
             skip: Pagination offset
             limit: Page size
             
@@ -144,21 +140,7 @@ class RequestRepository:
         if state:
             query = query.filter(Request.state.ilike(f"%{state}%"))
         
-        # Budget filters
-        if budget_min is not None:
-            query = query.filter(
-                or_(
-                    Request.budget_max >= budget_min,
-                    Request.budget_max.is_(None)
-                )
-            )
-        if budget_max is not None:
-            query = query.filter(
-                or_(
-                    Request.budget_min <= budget_max,
-                    Request.budget_min.is_(None)
-                )
-            )
+        
         
         # Get total count
         total = query.count()

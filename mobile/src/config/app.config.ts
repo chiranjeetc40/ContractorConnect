@@ -33,17 +33,21 @@ export const APP_CONFIG = {
   MAX_BID_PROPOSAL_LENGTH: 1000,
   MIN_REQUEST_DESCRIPTION_LENGTH: 50,
   
-  // Categories
+  // Categories (must match backend enum values exactly)
   REQUEST_CATEGORIES: [
-    'Structural Fix',
-    'Plumbing',
-    'Electrical',
-    'Carpentry',
-    'Painting',
-    'Cleaning',
-    'Renovation',
-    'Landscaping',
-    'Other',
+    { label: 'Construction', value: 'CONSTRUCTION' },
+    { label: 'Structural Fix', value: 'STRUCTURAL_FIX' },
+    { label: 'Renovation', value: 'RENOVATION' },
+    { label: 'Plumbing', value: 'PLUMBING' },
+    { label: 'Electrical', value: 'ELECTRICAL' },
+    { label: 'Painting', value: 'PAINTING' },
+    { label: 'Carpentry', value: 'CARPENTRY' },
+    { label: 'Flooring', value: 'FLOORING' },
+    { label: 'Roofing', value: 'ROOFING' },
+    { label: 'Landscaping', value: 'LANDSCAPING' },
+    { label: 'Cleaning', value: 'CLEANING' },
+    { label: 'Interior Design', value: 'INTERIOR_DESIGN' },
+    { label: 'Other', value: 'OTHER' },
   ],
   
   // Status Colors (matching backend)

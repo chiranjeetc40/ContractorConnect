@@ -17,7 +17,6 @@ Tap FAB → CREATE REQUEST SCREEN
 ├─ Description  
 ├─ Category (Plumbing, Electrical, etc.)
 ├─ Location
-├─ Budget Range
 └─ Submit
     ↓
 Request Created → Back to Home
@@ -41,7 +40,6 @@ HOME SCREEN: "Available Work"
     ↓
 Tap Request → VIEW DETAILS
 ├─ Request information
-├─ Budget range
 ├─ Location
 └─ Submit Bid Button
     ↓

@@ -33,8 +33,6 @@ interface FormData {
   locationCity: string;
   locationState: string;
   locationPincode: string;
-  budgetMin: string;
-  budgetMax: string;
 }
 
 interface FormErrors {
@@ -45,8 +43,6 @@ interface FormErrors {
   locationCity?: string;
   locationState?: string;
   locationPincode?: string;
-  budgetMin?: string;
-  budgetMax?: string;
 }
 
 const CreateRequestScreen: React.FC<Props> = ({ navigation }) => {
@@ -58,8 +54,6 @@ const CreateRequestScreen: React.FC<Props> = ({ navigation }) => {
     locationCity: '',
     locationState: '',
     locationPincode: '',
-    budgetMin: '',
-    budgetMax: '',
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -117,30 +111,15 @@ const CreateRequestScreen: React.FC<Props> = ({ navigation }) => {
       newErrors.locationPincode = 'Pincode must be 6 digits';
     }
 
-    // Budget validation (optional but must be valid if provided)
-    if (formData.budgetMin && isNaN(Number(formData.budgetMin))) {
-      newErrors.budgetMin = 'Must be a valid number';
-    }
-
-    if (formData.budgetMax && isNaN(Number(formData.budgetMax))) {
-      newErrors.budgetMax = 'Must be a valid number';
-    }
-
-    if (
-      formData.budgetMin &&
-      formData.budgetMax &&
-      Number(formData.budgetMin) > Number(formData.budgetMax)
-    ) {
-      newErrors.budgetMax = 'Max budget must be greater than min budget';
-    }
+   
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   // Handle category selection
-  const handleCategorySelect = (category: string) => {
-    updateField('category', category);
+  const handleCategorySelect = (categoryValue: string) => {
+    updateField('category', categoryValue);
     setShowCategoryPicker(false);
   };
 
@@ -160,14 +139,12 @@ const CreateRequestScreen: React.FC<Props> = ({ navigation }) => {
     try {
       const requestData = {
         title: formData.title.trim(),
-        category: formData.category.toLowerCase(), // Convert to lowercase for backend enum
+        category: formData.category, // Send UPPERCASE value directly (e.g., 'STRUCTURAL_FIX')
         description: formData.description.trim(),
         location: formData.locationAddress.trim(), // Backend expects 'location' not 'location_address'
         city: formData.locationCity.trim(), // Backend expects 'city'
         state: formData.locationState.trim(), // Backend expects 'state'
         pincode: formData.locationPincode.trim(), // Backend expects 'pincode'
-        budget_min: formData.budgetMin ? Number(formData.budgetMin) : undefined,
-        budget_max: formData.budgetMax ? Number(formData.budgetMax) : undefined,
       };
       
       console.log('📡 [CreateRequestScreen] Sending request:', requestData);
@@ -204,18 +181,23 @@ const CreateRequestScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   // Get category icon
-  const getCategoryIcon = (category: string) => {
+  const getCategoryIcon = (categoryValue: string) => {
     const iconMap: Record<string, string> = {
-      'Plumbing': 'water',
-      'Electrical': 'flash',
-      'Carpentry': 'hammer',
-      'Painting': 'palette',
-      'Cleaning': 'sparkles',
-      'Gardening': 'flower',
-      'Security': 'shield-check',
-      'Other': 'tools',
+      'STRUCTURAL_FIX': 'wrench',
+      'PLUMBING': 'water',
+      'ELECTRICAL': 'flash',
+      'CARPENTRY': 'hammer',
+      'PAINTING': 'palette',
+      'CLEANING': 'sparkles',
+      'LANDSCAPING': 'flower',
+      'CONSTRUCTION': 'domain',
+      'RENOVATION': 'home-edit',
+      'FLOORING': 'texture-box',
+      'ROOFING': 'home-roof',
+      'INTERIOR_DESIGN': 'palette',
+      'OTHER': 'tools',
     };
-    return iconMap[category] || 'tools';
+    return iconMap[categoryValue] || 'tools';
   };
 
   // Render category picker
@@ -223,13 +205,13 @@ const CreateRequestScreen: React.FC<Props> = ({ navigation }) => {
     <View style={styles.categoryGrid}>
       {APP_CONFIG.REQUEST_CATEGORIES.map(category => (
         <Button
-          key={category}
-          mode={formData.category === category ? 'contained' : 'outlined'}
-          onPress={() => handleCategorySelect(category)}
+          key={category.value}
+          mode={formData.category === category.value ? 'contained' : 'outlined'}
+          onPress={() => handleCategorySelect(category.value)}
           style={styles.categoryButton}
-          icon={getCategoryIcon(category) as any}
+          icon={getCategoryIcon(category.value) as any}
         >
-          {category}
+          {category.label}
         </Button>
       ))}
     </View>
@@ -355,40 +337,8 @@ const CreateRequestScreen: React.FC<Props> = ({ navigation }) => {
             maxLength={6}
           />
 
-          {/* Budget Section */}
-          <View style={styles.sectionHeader}>
-            <MaterialCommunityIcons
-              name="cash"
-              size={20}
-              color={theme.colors.success as any}
-            />
-            <Text style={styles.sectionTitle}>Budget Range (Optional)</Text>
-          </View>
-
-          <View style={styles.row}>
-            <View style={styles.halfWidth}>
-              <Input
-                label="Minimum Budget"
-                value={formData.budgetMin}
-                onChangeText={(value) => updateField('budgetMin', value)}
-                error={errors.budgetMin}
-                placeholder="₹ 2000"
-                leftIcon="currency-inr"
-                keyboardType="number-pad"
-              />
-            </View>
-            <View style={styles.halfWidth}>
-              <Input
-                label="Maximum Budget"
-                value={formData.budgetMax}
-                onChangeText={(value) => updateField('budgetMax', value)}
-                error={errors.budgetMax}
-                placeholder="₹ 5000"
-                leftIcon="currency-inr"
-                keyboardType="number-pad"
-              />
-            </View>
-          </View>
+          
+          
 
           {/* Submit Button */}
           <Button

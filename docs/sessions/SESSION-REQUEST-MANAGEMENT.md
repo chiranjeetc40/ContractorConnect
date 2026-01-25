@@ -25,7 +25,6 @@ Complete database operations for request management with **15 methods**:
 - `search()` - Multi-filter search with text search
   - Search in title, description, required_skills
   - Filter by category, status, city, state
-  - Budget range filtering
   - Pagination support
   
 - `get_by_society()` - Get requests posted by specific society
@@ -43,7 +42,6 @@ Complete database operations for request management with **15 methods**:
 **Key Features:**
 - Pagination with skip/limit
 - Case-insensitive text search
-- Budget range filtering (handles NULL values)
 - Location-based filtering
 - Ordered by created_at DESC
 
@@ -72,7 +70,6 @@ Business logic with **9 main methods** implementing authorization and validation
 **`search_requests(filters)`**
 - Advanced search with RequestSearchFilters
 - Text search across multiple fields
-- Budget range filtering
 
 **`get_my_requests(user_id, skip, limit)`**
 - Returns society's own requests

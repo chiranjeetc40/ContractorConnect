@@ -80,11 +80,12 @@ class Settings(BaseSettings):
     
     # Email Configuration
     smtp_host: str = Field(default="smtp.gmail.com", alias="SMTP_HOST")
-    smtp_port: int = Field(default=587, alias="SMTP_PORT")
+    smtp_port: int = Field(default=465, alias="SMTP_PORT")  # Use SSL port by default
     smtp_user: Optional[str] = Field(default=None, alias="SMTP_USER")
     smtp_password: Optional[str] = Field(default=None, alias="SMTP_PASSWORD")
     smtp_from: str = Field(default="noreply@contractorconnect.com", alias="SMTP_FROM")
     smtp_from_name: str = Field(default="ContractorConnect", alias="SMTP_FROM_NAME")
+    smtp_enabled: bool = Field(default=True, alias="SMTP_ENABLED")  # Disable on Render/Production
     
     # File Storage
     storage_type: str = Field(default="local", alias="STORAGE_TYPE")

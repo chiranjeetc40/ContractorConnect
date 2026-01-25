@@ -10,14 +10,14 @@
 // For production: https://your-backend-url.com
 export const API_CONFIG = {
   // Base URL for API requests
-  // Using 192.168.1.107 - your computer's IP on local network
+  // Using 192.168.29.117 - your computer's IP on local network
   BASE_URL: __DEV__ 
-    ? 'http://192.168.1.103:8000/api/v1'  // Your computer's local IP for Expo Go
-    : 'https://your-production-api.com/api/v1',
+    ? 'http://192.168.29.117:8000/api/v1'  // Your computer's local IP for Expo Go
+    : 'https://contractorconnect.onrender.com/api/v1',  // Production URL - MUST include /api/v1
   
   // Alternative base URLs for different platforms (not used in current setup)
-  IOS_BASE_URL: 'http://192.168.1.107:8000/api/v1',
-  WEB_BASE_URL: 'http://192.168.1.107:8000/api/v1',
+  IOS_BASE_URL: 'https://contractorconnect.onrender.com/api/v1',
+  WEB_BASE_URL: 'https://contractorconnect.onrender.com/api/v1',
   
   // Request timeout (in milliseconds)
   TIMEOUT: 30000,

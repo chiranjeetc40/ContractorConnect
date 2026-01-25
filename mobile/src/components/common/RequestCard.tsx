@@ -16,8 +16,6 @@ interface RequestCardProps {
   category: string;
   status: RequestStatus;
   location: string; // City only
-  budgetMin?: number;
-  budgetMax?: number;
   datePosted: Date;
   bidCount: number;
   onPress: () => void;
@@ -29,21 +27,10 @@ const RequestCard: React.FC<RequestCardProps> = ({
   category,
   status,
   location,
-  budgetMin,
-  budgetMax,
   datePosted,
   bidCount,
   onPress,
 }) => {
-  // Format budget range
-  const formatBudget = () => {
-    if (!budgetMin && !budgetMax) return 'Budget not specified';
-    if (budgetMin && budgetMax) {
-      return `₹${budgetMin.toLocaleString('en-IN')} - ₹${budgetMax.toLocaleString('en-IN')}`;
-    }
-    if (budgetMin) return `₹${budgetMin.toLocaleString('en-IN')}+`;
-    return `Up to ₹${budgetMax?.toLocaleString('en-IN')}`;
-  };
 
   // Format date posted
   const formatDate = () => {
@@ -114,15 +101,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
         </View>
       </View>
 
-      {/* Budget */}
-      <View style={styles.budgetRow}>
-        <MaterialCommunityIcons
-          name="cash"
-          size={18}
-          color={theme.colors.success as any}
-        />
-        <Text style={styles.budget}>{formatBudget()}</Text>
-      </View>
+     
 
       {/* Footer: Date and Bid Count */}
       <View style={styles.footer}>
@@ -185,17 +164,6 @@ const styles = StyleSheet.create({
   location: {
     fontSize: theme.typography.body2.fontSize,
     color: theme.colors.text.secondary,
-  },
-  budgetRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: theme.spacing.sm,
-  },
-  budget: {
-    fontSize: theme.typography.body1.fontSize,
-    color: theme.colors.success as any,
-    fontWeight: '600',
   },
   footer: {
     flexDirection: 'row',
